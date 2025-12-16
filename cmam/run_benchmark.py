@@ -11,7 +11,6 @@ Create parameters.
 
 data_path = sys.argv[1]
 label = sys.argv[2]
-network_label = sys.argv[3]
 
 print("Load simulation parameters\n")
 
@@ -39,7 +38,7 @@ except FileNotFoundError:
 os.remove(fn)
 
 print("Create network\n")
-M = MultiAreaModel(network_label,
+M = MultiAreaModel('benchmark',
                    simulation=True,
                    sim_spec=custom_params['sim_params']
                    )
