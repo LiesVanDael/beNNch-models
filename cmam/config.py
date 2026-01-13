@@ -15,7 +15,7 @@ jobscript_template = """#!/bin/bash -x
 #SBATCH --ntasks={num_processes}
 #SBATCH --nodes={num_nodes} # -x jrc0650
 #SBATCH --mail-type=END,FAIL # notifications for job done & fail
-#SBATCH --mail-user=j.pronold@fz-juelich.de
+#SBATCH --mail-user=l.van.dael@extern.fz-juelich.de
 #SBATCH --account jinb33
 
 module purge
