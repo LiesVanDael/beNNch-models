@@ -25,7 +25,7 @@ if not record_spikes:
 os.mkdir(os.path.join(data_path, label))
 
 for net_params in network_params:
-    M = MultiAreaModel(network_params,
+    M = MultiAreaModel(net_params,
                        simulation=True,
                        sim_spec=sim_params,
                        theory=False,
