@@ -9,6 +9,8 @@ from config import base_path
 from start_jobs import start_job
 from figures.Schmidt2018_dyn.network_simulations import NEW_SIM_PARAMS
 
+print(f"base_path: ", base_path)
+
 N_scaling = float(sys.argv[1])
 num_processes = int(sys.argv[2])
 num_local_threads = int(sys.argv[3])
