@@ -103,6 +103,7 @@ class MultiAreaModel_3:
                                        p_,
                                        'custom_Data_Model_{}.json'.format(rand_data_label))
 
+            print(f"Dumping custom_params to: ", base_path)
             with open(tmp_parameter_fn, 'w') as f:
                 json.dump(self.custom_params, f)
             # Execute Data script
