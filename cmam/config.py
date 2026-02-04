@@ -1,5 +1,7 @@
+import os
+
 # Absolut path of repository
-base_path = '.'
+base_path = os.path.dirname(__file__)
 
 # Place to store simulations
 data_path ='./simulations'

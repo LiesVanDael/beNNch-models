@@ -120,6 +120,7 @@ class MultiAreaModel:
                                        p_,
                                        'custom_area_list_{}.json'.format(rand_data_label))
 
+            print(f"Dumping custom_params to: ", tmp_parameter_fn)
             with open(tmp_parameter_fn, 'w') as f:
                 json.dump(self.custom_params, f)
             self.params = nested_update(self.params, self.custom_params)
