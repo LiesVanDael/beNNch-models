@@ -40,7 +40,7 @@ from collections import OrderedDict
 from copy import deepcopy
 from .data_multiarea.Model import compute_Model_params
 from .analysis import Analysis
-from config import base_path, data_path
+from config import base_path
 from dicthash import dicthash
 from nested_dict import nested_dict
 from .multiarea_helpers import (
@@ -64,7 +64,8 @@ dicthash.FLOOR_SMALL_FLOATS = True
 
 class MultiAreaModel:
     def __init__(self, network_spec, theory=False, simulation=False,
-                 analysis=False, *args, **keywords):
+                 analysis=False, data_path=None,
+                 *args, **keywords):
         """
         Multiarea model class.
         An instance of the multiarea model with the given parameters.

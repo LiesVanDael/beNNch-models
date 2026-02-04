@@ -40,7 +40,8 @@ os.remove(fn)
 print("Create network\n")
 M = MultiAreaModel('benchmark',
                    simulation=True,
-                   sim_spec=custom_params['sim_params']
+                   sim_spec=custom_params['sim_params'],
+                   data_path=data_path,
                    )
 
 print("Simulate\n")
