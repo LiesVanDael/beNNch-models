@@ -32,7 +32,7 @@ def start_job(label, data_path, sumatra=False, reason=None, tag=None):
     global sim_params
 
     # Copy run_simulation script to simulation folder
-    shutil.copy2(os.path.join(base_path, 'run_simulation.py'),
+    shutil.copy2(os.path.join(base_path, 'run_benchmark.py'),
                  os.path.join(data_path, label))
 
     # Load simulation parameters
