@@ -29,7 +29,7 @@ from .analysis_helpers import _load_npy_to_dict, model_iter
 from config import base_path, data_path
 from copy import deepcopy
 from .default_params import nested_update, sim_params
-from .default_params import check_custom_params, network_params, complete_area_list # LVD
+from .default_params import check_custom_params, network_params, complete_area_list 
 from dicthash import dicthash
 from .multiarea_helpers import extract_area_dict, create_vector_mask
 try:
@@ -93,6 +93,7 @@ class Simulation:
             d = {'sim_params': self.custom_params,
                  'network_params': self.network.custom_params,
                  'network_label': self.network.label}
+            print(f"Dumping custom_params to {self.data_dir}")
             with open(os.path.join(self.data_dir,
                                    '_'.join(('custom_params', self.label))), 'w') as f:
                 json.dump(d, f)
