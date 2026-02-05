@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import nest
+import shutil
 
 from multiarea_model import MultiAreaModel
 
