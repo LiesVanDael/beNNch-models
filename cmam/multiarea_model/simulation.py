@@ -96,7 +96,7 @@ class Simulation:
                  'network_label': self.network.label}
             print(f"Dumping custom_params to {self.data_dir}")
             with open(os.path.join(self.data_dir,
-                                   '_'.join(('custom_params', self.data_folder_hash))), 'w') as f:
+                                   '_'.join(('custom_params'))), 'w') as f:
                 json.dump(d, f)
             print("Initialized simulation class.")
             self.dump()
