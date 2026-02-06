@@ -36,4 +36,4 @@ for net_params in network_params:
 print(M.label)
 print(M.simulation.label)
 
-start_job(M.simulation.label, data_path)
+start_job(M.simulation.label, data_path, data_folder_hash=label)
