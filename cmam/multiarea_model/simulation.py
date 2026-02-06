@@ -40,7 +40,7 @@ except ImportError:
 from nested_dict import nested_dict # LVD
 
 class Simulation:
-    def __init__(self, network, sim_spec, network_spec):
+    def __init__(self, network, sim_spec, network_spec, data_folder_hash):
         """
         Simulation class.
         An instance of the simulation class with the given parameters.
@@ -56,6 +56,7 @@ class Simulation:
             custom simulation parameters that overwrite the
             default parameters defined in default_params.py
         """
+        self.data_folder_hash = data_folder_hash
         self.params = deepcopy(sim_params)
         if isinstance(sim_spec, dict):
             self.custom_params = sim_spec
@@ -82,7 +83,7 @@ class Simulation:
         self.areas_recorded = self.params['recording_dict']['areas_recorded']
         self.T = self.params['t_sim']
 
-        self.data_dir = os.path.join(data_path, self.label)
+        self.data_dir = os.path.join(data_path, self.data_folder_hash)
         if nest.Rank() == 0:
             try:
                 os.makedirs(os.path.join(self.data_dir, 'recordings'))
@@ -95,7 +96,7 @@ class Simulation:
                  'network_label': self.network.label}
             print(f"Dumping custom_params to {self.data_dir}")
             with open(os.path.join(self.data_dir,
-                                   '_'.join(('custom_params', self.label))), 'w') as f:
+                                   '_'.join(('custom_params', self.data_folder_hash))), 'w') as f:
                 json.dump(d, f)
             print("Initialized simulation class.")
             self.dump()

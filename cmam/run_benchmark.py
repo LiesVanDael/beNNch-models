@@ -43,6 +43,7 @@ M = MultiAreaModel('benchmark',
                    simulation=True,
                    sim_spec=custom_params['sim_params'],
                    data_path=data_path,
+                   data_folder_hash=label,
                    )
 
 print("Simulate\n")

@@ -64,7 +64,7 @@ dicthash.FLOOR_SMALL_FLOATS = True
 
 class MultiAreaModel:
     def __init__(self, network_spec, theory=False, simulation=False,
-                 analysis=False, data_path=None,
+                 analysis=False, data_path=None, data_folder_hash=None,
                  *args, **keywords):
         """
         Multiarea model class.
@@ -86,6 +86,7 @@ class MultiAreaModel:
             whether to create an instance of the analysis class as member.
 
         """
+        self.data_folder_hash = data_folder_hash
         self.params = deepcopy(network_params)
 
         # =======================================================
@@ -697,7 +698,7 @@ class MultiAreaModel:
         self.theory = Theory(self, theory_spec)
 
     def init_simulation(self, sim_spec, network_spec):
-        self.simulation = Simulation(self, sim_spec, network_spec) # LVD 
+        self.simulation = Simulation(self, sim_spec, network_spec, self.data_folder_hash) # LVD 
 
     def init_analysis(self, ana_spec):
         assert(hasattr(self, 'simulation'))

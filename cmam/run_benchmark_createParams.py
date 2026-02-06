@@ -29,7 +29,9 @@ for net_params in network_params:
                        simulation=True,
                        sim_spec=sim_params,
                        theory=False,
-                       analysis=False)
+                       analysis=False,
+                       data_path=data_path,
+                       data_folder_hash=label)
 
 print(M.label)
 print(M.simulation.label)
