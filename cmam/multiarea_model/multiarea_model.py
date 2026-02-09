@@ -543,7 +543,7 @@ class MultiAreaModel:
             if isinstance(network_spec, dict):
                 parameter_fn = os.path.join(base_path,
                                             'config_files',
-                                            '{}_config'.format(self.label))
+                                            '{}_config'.format(self.data_folder_hash))
                 data_fn = os.path.join(base_path,
                                        'config_files',
                                        'custom_Data_Model_{}.json'.format(self.label))
@@ -586,7 +586,7 @@ class MultiAreaModel:
             print("Initializing network from label.")
             parameter_fn = os.path.join(base_path,
                                         'config_files',
-                                        '{}_config'.format(network_spec))
+                                        '{}_config'.format(self.data_folder_hash))
             tmp_data_fn = os.path.join(base_path,
                                        'config_files',
                                        'custom_Data_Model_{}.json'.format(network_spec))
