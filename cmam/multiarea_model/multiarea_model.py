@@ -542,21 +542,21 @@ class MultiAreaModel:
             # ================
 
             if isinstance(network_spec, dict):
-                parameter_fn = os.path.join(base_path,
-                                            'config_files',
+                parameter_fn = os.path.join(data_path,
+                                            data_folder_hash,
                                             '{}_config'.format(self.data_folder_hash))
                 print("parameter_fn: ", parameter_fn)
-                data_fn = os.path.join(base_path,
-                                       'config_files',
+                data_fn = os.path.join(data_path,
+                                       data_folder_hash,
                                        'custom_Data_Model_{}.json'.format(self.data_folder_hash))
-                structure_fn = os.path.join(base_path,
-                                       'config_files',
+                structure_fn = os.path.join(data_path,
+                                            data_folder_hash,
                                        'custom_structure_{}.json'.format(self.data_folder_hash))
-                distances_fn = os.path.join(base_path,
-                                       'config_files',
+                distances_fn = os.path.join(data_path,
+                                            data_folder_hash,
                                        'custom_distances_{}.json'.format(self.data_folder_hash))
-                area_list_fn = os.path.join(base_path,
-                                       'config_files',
+                area_list_fn = os.path.join(data_path,
+                                       data_folder_hash,
                                        'custom_area_list_{}.json'.format(self.data_folder_hash))
 
                 shutil.move(tmp_parameter_fn,
@@ -586,21 +586,21 @@ class MultiAreaModel:
 
         else:
             print("Initializing network from label.")
-            parameter_fn = os.path.join(base_path,
-                                        'config_files',
+            parameter_fn = os.path.join(data_path,
+                                        data_folder_hash,
                                         '{}_config'.format(self.data_folder_hash))
             print("parameter_fn 2: ", parameter_fn)
-            tmp_data_fn = os.path.join(base_path,
-                                       'config_files',
+            tmp_data_fn = os.path.join(data_path,
+                                       data_folder_hash,
                                        'custom_Data_Model_{}.json'.format(self.data_folder_hash))
-            structure_fn = os.path.join(base_path,
-                                   'config_files',
+            structure_fn = os.path.join(data_path,
+                                   data_folder_hash,
                                    'custom_structure_{}.json'.format(self.data_folder_hash))
-            distances_fn = os.path.join(base_path,
-                                   'config_files',
+            distances_fn = os.path.join(data_path,
+                                   data_folder_hash,
                                    'custom_distances_{}.json'.format(self.data_folder_hash))
-            area_list_fn = os.path.join(base_path,
-                                   'config_files',
+            area_list_fn = os.path.join(data_path,
+                                   data_folder_hash,
                                    'custom_area_list_{}.json'.format(self.data_folder_hash))
 
             if 'sim_spec' not in keywords:
