@@ -546,16 +546,16 @@ class MultiAreaModel:
                                             '{}_config'.format(self.data_folder_hash))
                 data_fn = os.path.join(base_path,
                                        'config_files',
-                                       'custom_Data_Model_{}.json'.format(self.label))
+                                       'custom_Data_Model_{}.json'.format(self.data_folder_hash))
                 structure_fn = os.path.join(base_path,
                                        'config_files',
-                                       'custom_structure_{}.json'.format(self.label))
+                                       'custom_structure_{}.json'.format(self.data_folder_hash))
                 distances_fn = os.path.join(base_path,
                                        'config_files',
-                                       'custom_distances_{}.json'.format(self.label))
+                                       'custom_distances_{}.json'.format(self.data_folder_hash))
                 area_list_fn = os.path.join(base_path,
                                        'config_files',
-                                       'custom_area_list_{}.json'.format(self.label))
+                                       'custom_area_list_{}.json'.format(self.data_folder_hash))
 
                 shutil.move(tmp_parameter_fn,
                             parameter_fn)
@@ -568,7 +568,7 @@ class MultiAreaModel:
                 shutil.move(tmp_area_list_fn,
                             area_list_fn)
             elif isinstance(network_spec, str):
-                assert(network_spec == self.label)
+                assert(network_spec == self.data_folder_hash)
             CLUSTER = self.params['cluster']
 
             CLUSTER['pulvinar'] = deepcopy(CLUSTER['cluster_stim'])
