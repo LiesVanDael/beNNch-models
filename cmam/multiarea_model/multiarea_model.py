@@ -87,6 +87,7 @@ class MultiAreaModel:
 
         """
         self.data_folder_hash = data_folder_hash
+        print("DATA_FOLDER_HASH: ", self.data_folder_hash)
         self.params = deepcopy(network_params)
 
         # =======================================================
@@ -588,6 +589,7 @@ class MultiAreaModel:
             parameter_fn = os.path.join(base_path,
                                         'config_files',
                                         '{}_config'.format(self.data_folder_hash))
+            print("parameter_fn 2: ", parameter_fn)
             tmp_data_fn = os.path.join(base_path,
                                        'config_files',
                                        'custom_Data_Model_{}.json'.format(self.data_folder_hash))
