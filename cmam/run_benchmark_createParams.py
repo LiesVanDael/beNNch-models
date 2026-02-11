@@ -2,7 +2,7 @@ import sys
 import os
 from multiarea_model import MultiAreaModel
 from start_jobs import start_job # create parameter folders
-from chapter_experiments.q4_vanilla import network_params
+from chapter_experiments.q50_vanilla import network_params
 
 num_processes = int(sys.argv[1])
 local_num_threads = int(sys.argv[2])
@@ -22,7 +22,7 @@ sim_params = {'num_processes': num_processes,
 if not record_spikes:
     sim_params['recording_dict']['areas_recorded'] = []
 
-os.mkdir(os.path.join(data_path, label))
+os.makedirs(os.path.join(data_path, label), exist_ok=True)
 
 for net_params in network_params:
     M = MultiAreaModel(net_params,
@@ -33,7 +33,7 @@ for net_params in network_params:
                        data_path=data_path,
                        data_folder_hash=label)
 
-print(M.label)
-print(M.simulation.label)
+print("M.label: ", M.label)
+print("M.simulation.label: ", M.simulation.label)
 
 start_job(M.simulation.label, data_path, data_folder_hash=label)
