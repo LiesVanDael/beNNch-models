@@ -142,7 +142,7 @@ class Simulation:
                               'simulation.py'),
                  os.path.join('multiarea_model',
                               'default_params.py'),
-                 os.path.join(self.network.data_path, data_folder_hash,
+                 os.path.join(self.network.data_path, self.data_folder_hash,
                               ''.join(('custom_Data_Model_', self.network.data_folder_hash, '.json'))),
                  os.path.join('config_files',
                               '_'.join((self.network.data_folder_hash, 'config')))]

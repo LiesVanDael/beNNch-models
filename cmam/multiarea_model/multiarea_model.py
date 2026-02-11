@@ -86,6 +86,7 @@ class MultiAreaModel:
             whether to create an instance of the analysis class as member.
 
         """
+        self.data_path = data_path
         self.data_folder_hash = data_folder_hash
         print("DATA_FOLDER_HASH: ", self.data_folder_hash)
         self.params = deepcopy(network_params)
