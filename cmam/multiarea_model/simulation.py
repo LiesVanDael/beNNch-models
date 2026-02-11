@@ -142,8 +142,6 @@ class Simulation:
                               'simulation.py'),
                  os.path.join('multiarea_model',
                               'default_params.py'),
-                 os.path.join(self.network.data_path, self.data_folder_hash,
-                              ''.join(('custom_Data_Model_', self.network.data_folder_hash, '.json'))),
                  os.path.join('config_files',
                               '_'.join((self.network.data_folder_hash, 'config')))]
         if self.network.params['connection_params']['replace_cc_input_source'] is not None:
