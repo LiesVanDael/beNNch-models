@@ -143,9 +143,9 @@ class Simulation:
                  os.path.join('multiarea_model',
                               'default_params.py'),
                  os.path.join('config_files',
-                              ''.join(('custom_Data_Model_', self.network.label, '.json'))),
+                              ''.join(('custom_Data_Model_', self.network.data_folder_hash, '.json'))),
                  os.path.join('config_files',
-                              '_'.join((self.network.label, 'config')))]
+                              '_'.join((self.network.data_folder_hash, 'config')))]
         if self.network.params['connection_params']['replace_cc_input_source'] is not None:
             fs = self.network.params['connection_params']['replace_cc_input_source']
             if '.json' in fs:

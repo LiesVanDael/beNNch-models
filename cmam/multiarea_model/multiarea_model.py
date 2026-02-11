@@ -544,6 +544,7 @@ class MultiAreaModel:
                 parameter_fn = os.path.join(base_path,
                                             'config_files',
                                             '{}_config'.format(self.data_folder_hash))
+                print("parameter_fn: ", parameter_fn)
                 data_fn = os.path.join(base_path,
                                        'config_files',
                                        'custom_Data_Model_{}.json'.format(self.data_folder_hash))
@@ -589,16 +590,16 @@ class MultiAreaModel:
                                         '{}_config'.format(self.data_folder_hash))
             tmp_data_fn = os.path.join(base_path,
                                        'config_files',
-                                       'custom_Data_Model_{}.json'.format(network_spec))
+                                       'custom_Data_Model_{}.json'.format(self.data_folder_hash))
             structure_fn = os.path.join(base_path,
                                    'config_files',
-                                   'custom_structure_{}.json'.format(network_spec))
+                                   'custom_structure_{}.json'.format(self.data_folder_hash))
             distances_fn = os.path.join(base_path,
                                    'config_files',
-                                   'custom_distances_{}.json'.format(network_spec))
+                                   'custom_distances_{}.json'.format(self.data_folder_hash))
             area_list_fn = os.path.join(base_path,
                                    'config_files',
-                                   'custom_area_list_{}.json'.format(network_spec))
+                                   'custom_area_list_{}.json'.format(self.data_folder_hash))
 
             if 'sim_spec' not in keywords:
                 sim_spec = {}
@@ -609,7 +610,7 @@ class MultiAreaModel:
                     {'params': nested_update(sim_params, sim_spec),
                      'network_label': network_spec
                      })
-            sim_path = os.path.join(data_path, sim_label)
+            sim_path = os.path.join(data_path, self.data_folder_hash)
 
             self.label = network_spec
 
