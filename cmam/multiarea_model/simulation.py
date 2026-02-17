@@ -94,7 +94,6 @@ class Simulation:
             d = {'sim_params': self.custom_params,
                  'network_params': self.network.custom_params,
                  'network_label': self.network.label}
-            print(f"Dumping custom_params to {self.data_dir}")
             with open(os.path.join(self.data_dir,
                                    'custom_params'), 'w') as f:
                 json.dump(d, f)

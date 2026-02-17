@@ -123,7 +123,6 @@ def compute_Model_params(out_label='', mode='default'):
         prefix = 'default'
     elif mode == 'custom':
         prefix = 'custom_data_files/custom'
-        print(f"Loading custom_params from: ", basepath)
         with open(os.path.join(basepath, '.'.join(('_'.join((prefix,
                                                              out_label,
                                                              'parameter_dict')),

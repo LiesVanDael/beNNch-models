@@ -88,7 +88,6 @@ class MultiAreaModel:
         """
         self.data_path = data_path
         self.data_folder_hash = data_folder_hash
-        print("DATA_FOLDER_HASH: ", self.data_folder_hash)
         self.params = deepcopy(network_params)
 
         # =======================================================
@@ -102,7 +101,6 @@ class MultiAreaModel:
             # Draw random integer label for data script to avoid clashes with
             # parallelly created class instances
             rand_data_label = np.random.randint(10000)
-            print("RAND_DATA_LABEL", rand_data_label)
             tmp_parameter_fn = os.path.join(base_path,
                                             p_,
                                             'custom_{}_parameter_dict.json'.format(rand_data_label))
@@ -123,7 +121,6 @@ class MultiAreaModel:
                                        p_,
                                        'custom_area_list_{}.json'.format(rand_data_label))
 
-            print(f"Dumping custom_params to: ", tmp_parameter_fn)
             with open(tmp_parameter_fn, 'w') as f:
                 json.dump(self.custom_params, f)
             self.params = nested_update(self.params, self.custom_params)
@@ -546,7 +543,6 @@ class MultiAreaModel:
                 parameter_fn = os.path.join(data_path,
                                             data_folder_hash,
                                             '{}_config'.format(self.data_folder_hash))
-                print("parameter_fn: ", parameter_fn)
                 data_fn = os.path.join(data_path,
                                        data_folder_hash,
                                        'custom_Data_Model_{}.json'.format(self.data_folder_hash))
@@ -590,7 +586,6 @@ class MultiAreaModel:
             parameter_fn = os.path.join(data_path,
                                         data_folder_hash,
                                         '{}_config'.format(self.data_folder_hash))
-            print("parameter_fn 2: ", parameter_fn)
             tmp_data_fn = os.path.join(data_path,
                                        data_folder_hash,
                                        'custom_Data_Model_{}.json'.format(self.data_folder_hash))
@@ -670,7 +665,7 @@ class MultiAreaModel:
                 sim_spec = {}
             else:
                 sim_spec = keywords['sim_spec']
-            self.init_simulation(sim_spec, network_spec) # LVD
+            self.init_simulation(sim_spec, network_spec)
         te = time.time()
         passed_time = round(te - ts, 3)
         print(f'init simulation took {passed_time} s')
