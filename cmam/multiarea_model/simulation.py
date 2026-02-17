@@ -29,7 +29,7 @@ from .analysis_helpers import _load_npy_to_dict, model_iter
 from config import base_path, data_path
 from copy import deepcopy
 from .default_params import nested_update, sim_params
-from .default_params import check_custom_params, network_params, complete_area_list # LVD
+from .default_params import check_custom_params, network_params, complete_area_list 
 from dicthash import dicthash
 from .multiarea_helpers import extract_area_dict, create_vector_mask
 try:
@@ -40,7 +40,7 @@ except ImportError:
 from nested_dict import nested_dict # LVD
 
 class Simulation:
-    def __init__(self, network, sim_spec, network_spec):
+    def __init__(self, network, sim_spec, network_spec, data_folder_hash):
         """
         Simulation class.
         An instance of the simulation class with the given parameters.
@@ -56,6 +56,7 @@ class Simulation:
             custom simulation parameters that overwrite the
             default parameters defined in default_params.py
         """
+        self.data_folder_hash = data_folder_hash
         self.params = deepcopy(sim_params)
         if isinstance(sim_spec, dict):
             self.custom_params = sim_spec
@@ -82,7 +83,7 @@ class Simulation:
         self.areas_recorded = self.params['recording_dict']['areas_recorded']
         self.T = self.params['t_sim']
 
-        self.data_dir = os.path.join(data_path, self.label)
+        self.data_dir = os.path.join(data_path, self.data_folder_hash)
         if nest.Rank() == 0:
             try:
                 os.makedirs(os.path.join(self.data_dir, 'recordings'))
@@ -94,7 +95,7 @@ class Simulation:
                  'network_params': self.network.custom_params,
                  'network_label': self.network.label}
             with open(os.path.join(self.data_dir,
-                                   '_'.join(('custom_params', self.label))), 'w') as f:
+                                   'custom_params'), 'w') as f:
                 json.dump(d, f)
             print("Initialized simulation class.")
             self.dump()
@@ -139,11 +140,7 @@ class Simulation:
                  os.path.join('multiarea_model',
                               'simulation.py'),
                  os.path.join('multiarea_model',
-                              'default_params.py'),
-                 os.path.join('config_files',
-                              ''.join(('custom_Data_Model_', self.network.label, '.json'))),
-                 os.path.join('config_files',
-                              '_'.join((self.network.label, 'config')))]
+                              'default_params.py'),]
         if self.network.params['connection_params']['replace_cc_input_source'] is not None:
             fs = self.network.params['connection_params']['replace_cc_input_source']
             if '.json' in fs:

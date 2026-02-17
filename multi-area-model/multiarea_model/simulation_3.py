@@ -391,10 +391,15 @@ class Simulation:
         d.update(nest.GetKernelStatus())
 
         if self.detailed_timers:
-            # subtract presim timers from simtime timers
-            for key in self.presim_timers.keys():
-                d[key] -= self.presim_timers[key]
-            
+            for key, pre in self.presim_timers.items():
+                a = d[key]
+                r = np.asarray(a) - np.asarray(pre)
+                # keep tuples as tuples; scalars stay scalars; mixed -> tuple
+                if isinstance(a, tuple):
+                    d[key] = tuple(r.tolist())
+                else:
+                    d[key] = r.item() if r.ndim == 0 else tuple(r.tolist()) 
+
         print(d)
 
         fn = os.path.join(self.data_dir,

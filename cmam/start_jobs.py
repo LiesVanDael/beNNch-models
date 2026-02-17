@@ -11,7 +11,7 @@ except ImportError:
     sumatra_found = False
 
 
-def start_job(label, data_path, sumatra=False, reason=None, tag=None):
+def start_job(label, data_path, data_folder_hash, sumatra=False, reason=None, tag=None):
     """
     Create parameter folders.
 
@@ -32,14 +32,13 @@ def start_job(label, data_path, sumatra=False, reason=None, tag=None):
     global sim_params
 
     # Copy run_simulation script to simulation folder
-    shutil.copy2(os.path.join(base_path, 'run_simulation.py'),
-                 os.path.join(data_path, label))
+    shutil.copy2(os.path.join(base_path, 'run_benchmark.py'),
+                 os.path.join(data_path, data_folder_hash))
 
     # Load simulation parameters
     fn = os.path.join(data_path,
-                      label,
-                      '_'.join(('custom_params',
-                                label)))
+                      data_folder_hash,
+                      'custom_params')
     with open(fn, 'r') as f:
         custom_params = json.load(f)
     sim_params = nested_update(sim_params, custom_params['sim_params'])

@@ -40,7 +40,7 @@ from collections import OrderedDict
 from copy import deepcopy
 from .data_multiarea.Model import compute_Model_params
 from .analysis import Analysis
-from config import base_path, data_path
+from config import base_path
 from dicthash import dicthash
 from nested_dict import nested_dict
 from .multiarea_helpers import (
@@ -64,7 +64,8 @@ dicthash.FLOOR_SMALL_FLOATS = True
 
 class MultiAreaModel:
     def __init__(self, network_spec, theory=False, simulation=False,
-                 analysis=False, *args, **keywords):
+                 analysis=False, data_path=None, data_folder_hash=None,
+                 *args, **keywords):
         """
         Multiarea model class.
         An instance of the multiarea model with the given parameters.
@@ -85,6 +86,8 @@ class MultiAreaModel:
             whether to create an instance of the analysis class as member.
 
         """
+        self.data_path = data_path
+        self.data_folder_hash = data_folder_hash
         self.params = deepcopy(network_params)
 
         # =======================================================
@@ -98,7 +101,6 @@ class MultiAreaModel:
             # Draw random integer label for data script to avoid clashes with
             # parallelly created class instances
             rand_data_label = np.random.randint(10000)
-            print("RAND_DATA_LABEL", rand_data_label)
             tmp_parameter_fn = os.path.join(base_path,
                                             p_,
                                             'custom_{}_parameter_dict.json'.format(rand_data_label))
@@ -538,21 +540,21 @@ class MultiAreaModel:
             # ================
 
             if isinstance(network_spec, dict):
-                parameter_fn = os.path.join(base_path,
-                                            'config_files',
-                                            '{}_config'.format(self.label))
-                data_fn = os.path.join(base_path,
-                                       'config_files',
-                                       'custom_Data_Model_{}.json'.format(self.label))
-                structure_fn = os.path.join(base_path,
-                                       'config_files',
-                                       'custom_structure_{}.json'.format(self.label))
-                distances_fn = os.path.join(base_path,
-                                       'config_files',
-                                       'custom_distances_{}.json'.format(self.label))
-                area_list_fn = os.path.join(base_path,
-                                       'config_files',
-                                       'custom_area_list_{}.json'.format(self.label))
+                parameter_fn = os.path.join(data_path,
+                                            data_folder_hash,
+                                            '{}_config'.format(self.data_folder_hash))
+                data_fn = os.path.join(data_path,
+                                       data_folder_hash,
+                                       'custom_Data_Model_{}.json'.format(self.data_folder_hash))
+                structure_fn = os.path.join(data_path,
+                                            data_folder_hash,
+                                       'custom_structure_{}.json'.format(self.data_folder_hash))
+                distances_fn = os.path.join(data_path,
+                                            data_folder_hash,
+                                       'custom_distances_{}.json'.format(self.data_folder_hash))
+                area_list_fn = os.path.join(data_path,
+                                       data_folder_hash,
+                                       'custom_area_list_{}.json'.format(self.data_folder_hash))
 
                 shutil.move(tmp_parameter_fn,
                             parameter_fn)
@@ -565,7 +567,7 @@ class MultiAreaModel:
                 shutil.move(tmp_area_list_fn,
                             area_list_fn)
             elif isinstance(network_spec, str):
-                assert(network_spec == self.label)
+                assert(network_spec == self.data_folder_hash)
             CLUSTER = self.params['cluster']
 
             CLUSTER['pulvinar'] = deepcopy(CLUSTER['cluster_stim'])
@@ -581,21 +583,21 @@ class MultiAreaModel:
 
         else:
             print("Initializing network from label.")
-            parameter_fn = os.path.join(base_path,
-                                        'config_files',
-                                        '{}_config'.format(network_spec))
-            tmp_data_fn = os.path.join(base_path,
-                                       'config_files',
-                                       'custom_Data_Model_{}.json'.format(network_spec))
-            structure_fn = os.path.join(base_path,
-                                   'config_files',
-                                   'custom_structure_{}.json'.format(network_spec))
-            distances_fn = os.path.join(base_path,
-                                   'config_files',
-                                   'custom_distances_{}.json'.format(network_spec))
-            area_list_fn = os.path.join(base_path,
-                                   'config_files',
-                                   'custom_area_list_{}.json'.format(network_spec))
+            parameter_fn = os.path.join(data_path,
+                                        data_folder_hash,
+                                        '{}_config'.format(self.data_folder_hash))
+            tmp_data_fn = os.path.join(data_path,
+                                       data_folder_hash,
+                                       'custom_Data_Model_{}.json'.format(self.data_folder_hash))
+            structure_fn = os.path.join(data_path,
+                                   data_folder_hash,
+                                   'custom_structure_{}.json'.format(self.data_folder_hash))
+            distances_fn = os.path.join(data_path,
+                                   data_folder_hash,
+                                   'custom_distances_{}.json'.format(self.data_folder_hash))
+            area_list_fn = os.path.join(data_path,
+                                   data_folder_hash,
+                                   'custom_area_list_{}.json'.format(self.data_folder_hash))
 
             if 'sim_spec' not in keywords:
                 sim_spec = {}
@@ -606,7 +608,7 @@ class MultiAreaModel:
                     {'params': nested_update(sim_params, sim_spec),
                      'network_label': network_spec
                      })
-            sim_path = os.path.join(data_path, sim_label)
+            sim_path = os.path.join(data_path, self.data_folder_hash)
 
             self.label = network_spec
 
@@ -663,7 +665,7 @@ class MultiAreaModel:
                 sim_spec = {}
             else:
                 sim_spec = keywords['sim_spec']
-            self.init_simulation(sim_spec, network_spec) # LVD
+            self.init_simulation(sim_spec, network_spec)
         te = time.time()
         passed_time = round(te - ts, 3)
         print(f'init simulation took {passed_time} s')
@@ -695,7 +697,7 @@ class MultiAreaModel:
         self.theory = Theory(self, theory_spec)
 
     def init_simulation(self, sim_spec, network_spec):
-        self.simulation = Simulation(self, sim_spec, network_spec) # LVD 
+        self.simulation = Simulation(self, sim_spec, network_spec, self.data_folder_hash) # LVD 
 
     def init_analysis(self, ana_spec):
         assert(hasattr(self, 'simulation'))

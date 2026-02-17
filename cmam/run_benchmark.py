@@ -19,7 +19,6 @@ print("Load simulation parameters\n")
 fn = os.path.join(data_path,
                   label,
                   '_'.join(('custom_params',
-                            label,
                            str(nest.Rank()))))
 
 try:
@@ -29,7 +28,6 @@ except FileNotFoundError:
     fn_base = os.path.join(data_path,
                       label,
                       '_'.join(('custom_params',
-                                label
                                ))
                       )
     shutil.copy(fn_base, fn)
@@ -41,7 +39,9 @@ os.remove(fn)
 print("Create network\n")
 M = MultiAreaModel('benchmark',
                    simulation=True,
-                   sim_spec=custom_params['sim_params']
+                   sim_spec=custom_params['sim_params'],
+                   data_path=data_path,
+                   data_folder_hash=label,
                    )
 
 print("Simulate\n")

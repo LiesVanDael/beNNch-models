@@ -22,16 +22,18 @@ sim_params = {'num_processes': num_processes,
 if not record_spikes:
     sim_params['recording_dict']['areas_recorded'] = []
 
-os.mkdir(os.path.join(data_path, label))
+os.makedirs(os.path.join(data_path, label), exist_ok=True)
 
 for net_params in network_params:
     M = MultiAreaModel(net_params,
                        simulation=True,
                        sim_spec=sim_params,
                        theory=False,
-                       analysis=False)
+                       analysis=False,
+                       data_path=data_path,
+                       data_folder_hash=label)
 
-print(M.label)
-print(M.simulation.label)
+print("M.label: ", M.label)
+print("M.simulation.label: ", M.simulation.label)
 
-start_job(M.simulation.label, data_path)
+start_job(M.simulation.label, data_path, data_folder_hash=label)
