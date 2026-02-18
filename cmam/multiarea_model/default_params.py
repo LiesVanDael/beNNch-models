@@ -44,6 +44,8 @@ sim_params = {
     'dt': 0.1,
     # simulated time (in ms)
     't_sim': 10.0,
+    # presimulation time (in ms)
+    't_presim': 500.,
     # no. of MPI processes:
     'num_processes': 1,
     # no. of nodes:
