@@ -2,7 +2,7 @@ import sys
 import os
 from multiarea_model import MultiAreaModel
 from start_jobs import start_job # create parameter folders
-from chapter_experiments.q4_vanilla import network_params
+from chapter_experiments.q50_vanilla import network_params
 
 num_processes = int(sys.argv[1])
 local_num_threads = int(sys.argv[2])
