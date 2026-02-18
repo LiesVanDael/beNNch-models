@@ -37,7 +37,6 @@ try:
     sumatra_found = True
 except ImportError:
     sumatra_found = False
-from nested_dict import nested_dict # LVD
 
 class Simulation:
     def __init__(self, network, sim_spec, network_spec, data_folder_hash):
@@ -99,6 +98,8 @@ class Simulation:
                 json.dump(d, f)
             print("Initialized simulation class.")
             self.dump()
+
+        self.detailed_timers = 'time_communicate_spike_data' in nest.GetKernelStatus().keys()
 
     def __eq__(self, other):
         # Two simulations are equal if the simulation parameters and
@@ -387,7 +388,7 @@ class Simulation:
             return mem['heap']
         else:
             return mem
-
+    
     def logging(self):
         """
         Write runtime and memory for the first 30 MPI processes
@@ -401,15 +402,39 @@ class Simulation:
                  'base_memory': self.base_memory,
                  'network_memory': self.network_memory,
                  'total_memory': self.total_memory}
+
+            final_kernel_status = nest.kernel_status
+            d.update(final_kernel_status)
+
+            other_timers = ['time_communicate_prepare', 'time_communicate_target_data', 'time_construction_connect', 'time_construction_create', 'time_gather_target_data', 'time_omp_synchronization_construction']
+            other_timers.extend([timer + '_cpu' for timer in other_timers])
+
+            for timer in other_timers:
+                try:
+                    if type(d[timer]) == tuple or type(d[timer]) == list:
+                        timer_array = d[timer]
+                        d[timer] = timer_array[0]
+                        d[timer + "_max"] = max(timer_array)
+                        d[timer + "_min"] = min(timer_array)
+                        d[timer + "_mean"] = np.mean(timer_array)
+                        d[timer + "_all"] = timer_array
+                except KeyError:
+                    # KeyError if compiled without detailed timers, except time_simulate
+                    continue
+            print(d)
+
+            nest.Cleanup()
+
+
             fn = os.path.join(self.data_dir,
                               'recordings',
                               '_'.join((self.label,
                                         'logfile',
                                         str(nest.Rank()))))
-            with open(fn, 'w') as f:
-                json.dump(d, f)
+            with open(fn, 'a') as f:
+                for key, value in d.items():
+                    f.write(key + ' ' + str(value) + '\n')
 
-    # LVD
     def save_network_gids(self): 
         with open(os.path.join(self.data_dir,
                                'recordings',
