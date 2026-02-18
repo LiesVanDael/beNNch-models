@@ -1,3 +1,4 @@
+import numpy as np
 import sys
 import os
 from multiarea_model import MultiAreaModel
@@ -11,6 +12,7 @@ rng_seed = int(sys.argv[4])
 data_path = sys.argv[5]
 label = sys.argv[6]
 record_spikes = sys.argv[7]
+Q = int(sys.argv[8])
 
 sim_params = {'num_processes': num_processes,
               'local_num_threads': local_num_threads,
@@ -24,7 +26,10 @@ if not record_spikes:
 
 os.makedirs(os.path.join(data_path, label), exist_ok=True)
 
+
 for net_params in network_params:
+    net_params['Q'] = Q
+    net_params['J_E_PLUS'] = 0.3*Q
     M = MultiAreaModel(net_params,
                        simulation=True,
                        sim_spec=sim_params,
