@@ -397,7 +397,7 @@ class Simulation:
     
     def logging(self):
         """
-        Write runtime and memory for all 30 MPI processes
+        Write runtime and memory for all MPI processes
         to file.
         """
         d = {'py_time_prepare': self.time_prepare,
