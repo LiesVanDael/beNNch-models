@@ -1,9 +1,8 @@
-import numpy as np
 import sys
 import os
 from multiarea_model import MultiAreaModel
 from start_jobs import start_job # create parameter folders
-from chapter_experiments.q50_vanilla import network_params
+from chapter_experiments.q4_vanilla import network_params
 
 num_processes = int(sys.argv[1])
 local_num_threads = int(sys.argv[2])
@@ -26,10 +25,7 @@ if not record_spikes:
 
 os.makedirs(os.path.join(data_path, label), exist_ok=True)
 
-
 for net_params in network_params:
-    net_params['Q'] = Q
-    net_params['J_E_PLUS'] = 0.3*Q
     M = MultiAreaModel(net_params,
                        simulation=True,
                        sim_spec=sim_params,

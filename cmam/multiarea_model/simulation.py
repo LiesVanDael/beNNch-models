@@ -37,7 +37,6 @@ try:
     sumatra_found = True
 except ImportError:
     sumatra_found = False
-from nested_dict import nested_dict # LVD
 
 class Simulation:
     def __init__(self, network, sim_spec, network_spec, data_folder_hash):
@@ -82,6 +81,7 @@ class Simulation:
         self.areas_simulated = self.params['areas_simulated']
         self.areas_recorded = self.params['recording_dict']['areas_recorded']
         self.T = self.params['t_sim']
+        self.pre_T = self.params['t_presim']
 
         self.data_dir = os.path.join(data_path, self.data_folder_hash)
         if nest.Rank() == 0:
@@ -323,7 +323,7 @@ class Simulation:
         print("Prepared simulation in {0:.2f} seconds.".format(self.time_prepare))
 
         self.create_recording_devices()
-        self.create_areas() # LVD
+        self.create_areas()
         t2 = time.time()
         self.time_network_local = t2 - t1
         print("Created areas and internal connections in {0:.2f} seconds.".format(
@@ -340,25 +340,25 @@ class Simulation:
         self.create_stimulation()
         t4 = time.time()
         self.network_memory = self.memory()
-        self.time_network_global = t4 - t3
+        self.time_create_stimulation = t4 - t3
         print("Created stimulations in {0:.2f} seconds.".format(
-            self.time_network_global))
+            self.time_create_stimulation))
 
         # Stimulates only one cluster of an area
         self.create_cluster_stimulation()
         t5 = time.time()
         self.network_memory = self.memory()
-        self.time_network_global = t5 - t4
+        self.time_create_cluster_stimulation = t5 - t4
         print("Created cluster stimulations in {0:.2f} seconds.".format(
-            self.time_network_global))
+            self.time_create_cluster_stimulation))
 
         # Stimulates only one cluster of an area as pulvinar would
         self.create_pulvinar_stimulation()
         t6 = time.time()
         self.network_memory = self.memory()
-        self.time_network_global = t6 - t5
+        self.time_create_pulvinar_stimulation = t6 - t5
         print("Created pulvinar stimulations in {0:.2f} seconds.".format(
-            self.time_network_global))
+            self.time_create_pulvinar_stimulation))
 
         print(f'Calls to connect: {connect.call_counter}')
         print(f'Number of synapses: {connect.synapse_counter}')
@@ -367,10 +367,17 @@ class Simulation:
         self.save_stim_gids()
         self.save_cluster_stim_gids()
         self.save_pulvinar_gids()
-
-        nest.Simulate(self.T)
+        
+        nest.Prepare()
         t7 = time.time()
-        self.time_simulate = t7 - t6
+        nest.Run(self.pre_T)
+        self.time_presimulate = time.time() - t7
+        print("Presimulation time in {0:.2f} seconds.".format(self.time_presimulate)       ) 
+        self.intermediate_kernel_status = nest.kernel_status
+
+        t8 = time.time()
+        nest.Run(self.T)
+        self.time_simulate = time.time() - t8
         self.total_memory = self.memory()
         print("Simulated network in {0:.2f} seconds.".format(self.time_simulate))
         self.logging()
@@ -387,29 +394,81 @@ class Simulation:
             return mem['heap']
         else:
             return mem
-
+    
     def logging(self):
         """
-        Write runtime and memory for the first 30 MPI processes
+        Write runtime and memory for all MPI processes
         to file.
         """
-        if nest.Rank() < 30:
-            d = {'time_prepare': self.time_prepare,
-                 'time_network_local': self.time_network_local,
-                 'time_network_global': self.time_network_global,
-                 'time_simulate': self.time_simulate,
-                 'base_memory': self.base_memory,
-                 'network_memory': self.network_memory,
-                 'total_memory': self.total_memory}
-            fn = os.path.join(self.data_dir,
-                              'recordings',
-                              '_'.join((self.label,
-                                        'logfile',
-                                        str(nest.Rank()))))
-            with open(fn, 'w') as f:
-                json.dump(d, f)
+        d = {'py_time_prepare': self.time_prepare,
+             'py_time_network_local': self.time_network_local,
+             'py_time_network_global': self.time_network_global,
+             'py_time_create_stimulation': self.time_create_stimulation,
+             'py_time_create_cluster_stimulation': self.time_create_cluster_stimulation,
+             'py_time_create_pulvinar_stimulation': self.time_create_pulvinar_stimulation,
+             'py_time_presimulate': self.time_presimulate,
+             'py_time_simulate': self.time_simulate,
+             'base_memory': self.base_memory,
+             'network_memory': self.network_memory,
+             'total_memory': self.total_memory}
 
-    # LVD
+        final_kernel_status = nest.kernel_status
+        d.update(final_kernel_status)
+
+
+        # Subtract timer information from presimulation period
+        presim_timers = ['time_collocate_spike_data', 'time_communicate_spike_data', 'time_deliver_secondary_data', 'time_deliver_spike_data', 'time_gather_secondary_data', 'time_gather_spike_data', 'time_omp_synchronization_simulation', 'time_mpi_synchronization', 'time_simulate', 'time_update']
+        presim_timers.extend([timer + '_cpu' for timer in presim_timers])
+        other_timers = ['time_communicate_prepare', 'time_communicate_target_data', 'time_construction_connect', 'time_construction_create', 'time_gather_target_data', 'time_omp_synchronization_construction']
+        other_timers.extend([timer + '_cpu' for timer in other_timers])
+
+        for timer in presim_timers:
+            try:
+                if type(d[timer]) == tuple or type(d[timer]) == list:
+                    timer_array = tuple(d[timer][tid] - self.intermediate_kernel_status[timer][tid] for tid in range(len(d[timer])))
+                    d[timer] = timer_array[0]
+                    d[timer + "_max"] = max(timer_array)
+                    d[timer + "_min"] = min(timer_array)
+                    d[timer + "_mean"] = np.mean(timer_array)
+                    d[timer + "_all"] = timer_array
+                    d[timer + '_presim'] = self.intermediate_kernel_status[timer][0]
+                    d[timer + "_presim_max"] = max(self.intermediate_kernel_status[timer])
+                    d[timer + "_presim_min"] = min(self.intermediate_kernel_status[timer])
+                    d[timer + "_presim_avg"] = np.mean(self.intermediate_kernel_status[timer])
+                    d[timer + "_presim_all"] = self.intermediate_kernel_status[timer]
+                else:
+                    d[timer] -= self.intermediate_kernel_status[timer]
+                    d[timer + '_presim'] = self.intermediate_kernel_status[timer]
+            except KeyError:
+                # KeyError if compiled without detailed timers, except time_simulate
+                continue
+
+        for timer in other_timers:
+            try:
+                if type(d[timer]) == tuple or type(d[timer]) == list:
+                    timer_array = d[timer]
+                    d[timer] = timer_array[0]
+                    d[timer + "_max"] = max(timer_array)
+                    d[timer + "_min"] = min(timer_array)
+                    d[timer + "_mean"] = np.mean(timer_array)
+                    d[timer + "_all"] = timer_array
+            except KeyError:
+                # KeyError if compiled without detailed timers, except time_simulate
+                continue
+        print(d)
+
+        nest.Cleanup()
+
+
+        fn = os.path.join(self.data_dir,
+                          'recordings',
+                          '_'.join((self.label,
+                                    'logfile',
+                                    str(nest.Rank()))))
+        with open(fn, 'a') as f:
+            for key, value in d.items():
+                f.write(key + ' ' + str(value) + '\n')
+
     def save_network_gids(self): 
         with open(os.path.join(self.data_dir,
                                'recordings',
