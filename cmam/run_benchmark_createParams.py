@@ -28,8 +28,6 @@ os.makedirs(os.path.join(data_path, label), exist_ok=True)
 
 
 for net_params in network_params:
-    net_params['Q'] = Q
-    net_params['J_E_PLUS'] = 0.3*Q
     M = MultiAreaModel(net_params,
                        simulation=True,
                        sim_spec=sim_params,
