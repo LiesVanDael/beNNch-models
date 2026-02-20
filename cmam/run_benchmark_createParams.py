@@ -3,7 +3,7 @@ import sys
 import os
 from multiarea_model import MultiAreaModel
 from start_jobs import start_job # create parameter folders
-from network_params import network_params
+from params import params
 
 num_processes = int(sys.argv[1])
 local_num_threads = int(sys.argv[2])
@@ -26,7 +26,7 @@ if not record_spikes:
 
 os.makedirs(os.path.join(data_path, label), exist_ok=True)
 
-network_params = network_params(Q)
+network_params = params(Q)
 
 for net_params in network_params:
     M = MultiAreaModel(net_params,
