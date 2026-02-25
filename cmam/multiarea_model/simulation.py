@@ -309,7 +309,7 @@ class Simulation:
                                                             source_area.name,
                                                             cc_input[source_area.name])
 
-    def simulate(self): # LVD
+    def simulate(self):
         """
         Create the network and execute simulation.
         Record used memory and wallclock time.
@@ -331,7 +331,6 @@ class Simulation:
 
         self.cortico_cortical_input()
         t3 = time.time()
-        self.network_memory = self.memory()
         self.time_network_global = t3 - t2
         print("Created cortico-cortical connections in {0:.2f} seconds.".format(
             self.time_network_global))
@@ -339,7 +338,6 @@ class Simulation:
         # Stimulates all clusters of an area
         self.create_stimulation()
         t4 = time.time()
-        self.network_memory = self.memory()
         self.time_create_stimulation = t4 - t3
         print("Created stimulations in {0:.2f} seconds.".format(
             self.time_create_stimulation))
@@ -347,7 +345,6 @@ class Simulation:
         # Stimulates only one cluster of an area
         self.create_cluster_stimulation()
         t5 = time.time()
-        self.network_memory = self.memory()
         self.time_create_cluster_stimulation = t5 - t4
         print("Created cluster stimulations in {0:.2f} seconds.".format(
             self.time_create_cluster_stimulation))
@@ -363,11 +360,6 @@ class Simulation:
         print(f'Calls to connect: {connect.call_counter}')
         print(f'Number of synapses: {connect.synapse_counter}')
 
-        self.save_network_gids()
-        self.save_stim_gids()
-        self.save_cluster_stim_gids()
-        self.save_pulvinar_gids()
-        
         nest.Prepare()
         t7 = time.time()
         nest.Run(self.pre_T)

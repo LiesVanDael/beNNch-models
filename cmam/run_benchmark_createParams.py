@@ -11,7 +11,7 @@ t_sim = float(sys.argv[3])
 rng_seed = int(sys.argv[4])
 data_path = sys.argv[5]
 label = sys.argv[6]
-record_spikes = sys.argv[7]
+record_spikes = sys.argv[7].lower() in ("true", "1", "yes")
 Q = int(sys.argv[8])
 
 sim_params = {'num_processes': num_processes,
