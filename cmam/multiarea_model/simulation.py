@@ -392,7 +392,6 @@ class Simulation:
              'py_time_create_stimulation': self.time_create_stimulation,
              'py_time_create_cluster_stimulation': self.time_create_cluster_stimulation,
              'py_time_create_pulvinar_stimulation': self.time_create_pulvinar_stimulation,
-             'py_time_prepare': self.time_prepare,
              'py_time_network_prepare': self.time_network_prepare,
              'py_time_presimulate': self.time_presimulate,
              'py_time_simulate': self.time_simulate,
