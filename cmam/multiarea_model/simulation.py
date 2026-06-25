@@ -358,12 +358,14 @@ class Simulation:
 
         print(f'Calls to connect: {connect.call_counter}')
         print(f'Number of synapses: {connect.synapse_counter}')
-
-        nest.Prepare()
         t7 = time.time()
+        nest.Prepare()
+        self.time_prepare = time.time() - t7
+        print("Preparation took {0:.2f} seconds.".format(self.time_prepare))
+        t8 = time.time()
         nest.Run(self.pre_T)
-        self.time_presimulate = time.time() - t7
-        print("Presimulation time in {0:.2f} seconds.".format(self.time_presimulate)       ) 
+        self.time_presimulate = time.time() - t8
+        print("Presimulation time in {0:.2f} seconds.".format(self.time_presimulate() 
         self.intermediate_kernel_status = nest.kernel_status
 
         t8 = time.time()
@@ -390,6 +392,7 @@ class Simulation:
              'py_time_create_stimulation': self.time_create_stimulation,
              'py_time_create_cluster_stimulation': self.time_create_cluster_stimulation,
              'py_time_create_pulvinar_stimulation': self.time_create_pulvinar_stimulation,
+             'py_time_prepare': self.time_prepare,
              'py_time_presimulate': self.time_presimulate,
              'py_time_simulate': self.time_simulate,
              'base_memory': self.base_memory,
