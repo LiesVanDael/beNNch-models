@@ -120,7 +120,6 @@ class Simulation:
             for name in ['W', 'W_sd', 'K', 'N', 'synapses', 'rates', 'J', 'add_DC_drive']:
                         obj = getattr(self.network, name)
                         if hasattr(obj, "to_dict"):
-                            print('hasattr to dict')
                             obj = obj.to_dict()
                         with open(os.path.join(self.data_dir, f'{name}.pkl'), 'wb') as f:
                             pickle.dump(obj, f)
@@ -399,7 +398,7 @@ class Simulation:
 
         final_kernel_status = nest.kernel_status
         d.update(final_kernel_status)
-
+        print(f"final_kernel_status: {d}")
 
         # Subtract timer information from presimulation period
         presim_timers = ['time_collocate_spike_data', 'time_communicate_spike_data', 'time_deliver_secondary_data', 'time_deliver_spike_data', 'time_gather_secondary_data', 'time_gather_spike_data', 'time_omp_synchronization_simulation', 'time_mpi_synchronization', 'time_simulate', 'time_update']
