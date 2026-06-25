@@ -107,13 +107,12 @@ sim_params_100 = {
         'analysis': {'local_num_threads': 32}
         }
 
-network_params = []
-
 # =============================================================================
 # Define list of different experiments to be carried out
 # =============================================================================
 
 def params(Q):
+    network_params = []
     cc_weights_factor = [2.]  # [2.5]  # [2.]  # [1.0]
     cc_weights_I_factor = [2.2]  # [2.1, 2.2]  # [2.1, 2.2, 2.3, 2.4]  # [2.5, 3.]
     J_E_PLUS = [0.3*Q]  # [9, 10, 11]  # [8]  # [7]  # [1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20.]

@@ -163,9 +163,10 @@ def load_degree_data_nested_dict(N, synapses):  # N 3, synapses 6 # LVD
                 n_t = N.get(a_t, {}).get(layer_t, {}).get(pop_t, 0)
                 #n_t = sum(N.get(a_t, {}).get(layer_t, {}).get(pop_t, 0))
                 for a_s, d4 in d3.items():
-                    # Initialize sums
-                    indegrees_areas[a_t][a_s] = 0
-                    outdegrees_areas[a_t][a_s] = 0
+                    if a_s not in indegrees_areas[a_t]:
+                        # Initialize sums
+                        indegrees_areas[a_t][a_s] = 0
+                        outdegrees_areas[a_t][a_s] = 0
                     for layer_s, d5 in d4.items():
                         for pop_s, n_synapses in d5.items():
                             #n_s = sum(N.get(a_s, {}).get(layer_s, {}).get(pop_s, {}).values() or [0])
