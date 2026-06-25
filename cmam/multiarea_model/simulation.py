@@ -411,34 +411,34 @@ class Simulation:
 
         for timer in presim_timers:
             try:
-                if type(d[timer]) == tuple or type(d[timer]) == list:
-                    timer_array = tuple(d[timer][tid] - self.intermediate_kernel_status[timer][tid] for tid in range(len(d[timer])))
-                    d[timer] = timer_array[0]
-                    d[timer + "_max"] = max(timer_array)
-                    d[timer + "_min"] = min(timer_array)
-                    d[timer + "_mean"] = np.mean(timer_array)
-                    d[timer + "_all"] = timer_array
-                    d[timer + '_presim'] = self.intermediate_kernel_status[timer][0]
-                    d[timer + "_presim_max"] = max(self.intermediate_kernel_status[timer])
-                    d[timer + "_presim_min"] = min(self.intermediate_kernel_status[timer])
-                    d[timer + "_presim_avg"] = np.mean(self.intermediate_kernel_status[timer])
-                    d[timer + "_presim_all"] = self.intermediate_kernel_status[timer]
+                a = d[timer]
+                pre = self.intermediate_kernel_status[timer]
+                r = np.asarray(a) - np.asarray(pre)
+                if isinstance(a, tuple):
+                    d[timer] = tuple(r.tolist())
                 else:
-                    d[timer] -= self.intermediate_kernel_status[timer]
-                    d[timer + '_presim'] = self.intermediate_kernel_status[timer]
+                    d[timer] = r.item() if r.ndim == 0 else tuple(r.tolist())
+              #  d[timer + "_max"] = max(timer_array)
+              #  d[timer + "_min"] = min(timer_array)
+              #  d[timer + "_mean"] = np.mean(timer_array)
+              #  d[timer + "_all"] = timer_array
+              #  d[timer + '_presim'] = self.intermediate_kernel_status[timer]
+              #  d[timer + "_presim_max"] = max(self.intermediate_kernel_status[timer])
+              #  d[timer + "_presim_min"] = min(self.intermediate_kernel_status[timer])
+              #  d[timer + "_presim_avg"] = np.mean(self.intermediate_kernel_status[timer])
+              #  d[timer + "_presim_all"] = self.intermediate_kernel_status[timer]
             except KeyError:
                 # KeyError if compiled without detailed timers, except time_simulate
                 continue
 
         for timer in other_timers:
             try:
-                if type(d[timer]) == tuple or type(d[timer]) == list:
-                    timer_array = d[timer]
-                    d[timer] = timer_array[0]
-                    d[timer + "_max"] = max(timer_array)
-                    d[timer + "_min"] = min(timer_array)
-                    d[timer + "_mean"] = np.mean(timer_array)
-                    d[timer + "_all"] = timer_array
+                a = d[timer]
+                arr = np.asarray(a)
+                if isinstance(a, tuple):
+                    d[timer] = tuple(arr.tolist())
+                else:
+                    d[timer] = arr.item() if arr.ndim == 0 else tuple(arr.tolist())
             except KeyError:
                 # KeyError if compiled without detailed timers, except time_simulate
                 continue
