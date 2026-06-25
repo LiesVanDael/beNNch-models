@@ -34,6 +34,7 @@ import pandas as pd
 import time
 import nest
 import pickle
+import math
 from .default_params import complete_area_list, nested_update, network_params
 from .default_params import check_custom_params, sim_params
 from collections import OrderedDict
@@ -1022,6 +1023,8 @@ def clusterize_4(d, cluster_params, syn=False, K=False):
                         for layer_s, d5 in d4.items():
                             for pop_s, d6 in d5.items():
                                 val = d6 * divider
+                                if syn:
+                                    val = int(math.ceil(val))
                                 if pop_s == 'E' or pop_s == 'I':
                                     for c1 in cluster_s:
                                         new_dict[a_t][layer_t][pop_t][c0][a_s][layer_s][pop_s][c1] = val
@@ -1037,7 +1040,7 @@ def clusterize_2(d, cluster_params):
         for layer, d2 in d1.items():
             for pop, d3 in d2.items():
                 for c0 in cluster:
-                    new_dict[a][layer][pop][c0] = d3 / num_cluster
+                    new_dict[a][layer][pop][c0] = int(math.ceil(d3 / num_cluster))
     return new_dict
 
 def apply_clustering_strengths(W, CLUSTER, params):
