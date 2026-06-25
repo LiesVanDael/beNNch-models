@@ -22,7 +22,6 @@ import os
 import pprint
 import shutil
 import time
-import math
 
 from .analysis_helpers import _load_npy_to_dict, model_iter
 from config import base_path
@@ -101,8 +100,6 @@ class Simulation:
         self.time_create = 0
         self.time_connect_area = 0
         self.time_connect_cc = 0
-
-        self.detailed_timers = 'time_communicate_spike_data' in nest.GetKernelStatus().keys()
 
     def __eq__(self, other):
         # Two simulations are equal if the simulation parameters and
@@ -326,9 +323,9 @@ class Simulation:
         nest.Run(self.pre_T)
         self.time_presimulate = time.time() - t5
         self.init_memory = self.memory()
-        if self.detailed_timers:
-            self.logging_presim()
         print("Presimulation time in {0:.2f} seconds.".format(self.time_presimulate))
+
+        self.intermediate_kernel_status = nest.kernel_status
 
         t6 = time.time()
         nest.Run(self.T)
@@ -342,39 +339,20 @@ class Simulation:
         """
         Use NEST's memory wrapper function to record used memory.
         """
-        mem = nest.ll_api.sli_func('memory_thisjob')
+        try:
+            mem = nest.get("memory_size")
+        except KeyError:
+            mem = nest.ll_api.sli_func('memory_thisjob')
         if isinstance(mem, dict):
             return mem['heap']
         else:
             return mem
 
-    def logging_presim(self):
-        timer_keys = ['time_collocate_spike_data',
-                      'time_communicate_spike_data',
-                      'time_deliver_spike_data',
-                      'time_gather_spike_data',
-                      'time_update',
-                      'time_simulate'
-                      ]
-        values = nest.GetKernelStatus(timer_keys)
-
-        self.presim_timers = dict(zip(timer_keys, values))
-
-        fn = os.path.join(self.data_dir,
-                          'recordings',
-                          '_'.join((self.label,
-                                    'logfile',
-                                    str(nest.Rank()))))
-
-        with open(fn, 'w') as f:
-            for idx, value in enumerate(values):
-                f.write('presim_' + timer_keys[idx] + ' ' + str(value) + '\n')
-            f.write('presim_local_spike_counter' + ' ' + str(nest.GetKernelStatus('local_spike_counter')) + '\n')
-
     def logging(self):
         """
         Write runtime and memory for all MPI processes to file.
         """
+
         d = {'py_time_kernel_prepare': self.time_kernel_prepare,
              'py_time_network_local': self.time_network_local,
              'py_time_network_global': self.time_network_global,
@@ -389,19 +367,57 @@ class Simulation:
              'network_memory': self.network_memory,
              'init_memory': self.init_memory,
              'total_memory': self.total_memory}
-        d.update(nest.GetKernelStatus())
 
-        if self.detailed_timers:
-            for key, pre in self.presim_timers.items():
-                a = d[key]
-                r = np.asarray(a) - np.asarray(pre)
-                # keep tuples as tuples; scalars stay scalars; mixed -> tuple
-                if isinstance(a, tuple):
-                    d[key] = tuple(r.tolist())
-                else:
-                    d[key] = r.item() if r.ndim == 0 else tuple(r.tolist()) 
+        final_kernel_status = nest.kernel_status
+        d.update(final_kernel_status)
 
+        # Subtract timer information from presimulation period
+        presim_timers = ['time_collocate_spike_data', 'time_communicate_spike_data', 'time_deliver_secondary_data', 'time_deliver_spike_data', 'time_gather_secondary_data', 'time_gather_spike_data', 'time_omp_synchronization_simulation', 'time_mpi_synchronization', 'time_simulate', 'time_update']
+        presim_timers.extend([timer + '_cpu' for timer in presim_timers])
+        other_timers = ['time_communicate_prepare', 'time_communicate_target_data', 'time_construction_connect', 'time_construction_create', 'time_gather_target_data', 'time_omp_synchronization_construction']
+        other_timers.extend([timer + '_cpu' for timer in other_timers])
+
+        for timer in presim_timers:
+            try:
+                try:   
+                    timer_array = tuple(d[timer][tid] - self.intermediate_kernel_status[timer][tid] for tid in range(len(d[timer])))
+                    d[timer] = timer_array[0]
+                    d[timer + "_max"] = max(timer_array)
+                    d[timer + "_min"] = min(timer_array)
+                    d[timer + "_mean"] = np.mean(timer_array)
+                    d[timer + "_all"] = timer_array
+                    d[timer + '_presim'] = self.intermediate_kernel_status[timer][0]
+                    d[timer + "_presim_max"] = max(self.intermediate_kernel_status[timer])
+                    d[timer + "_presim_min"] = min(self.intermediate_kernel_status[timer])
+                    d[timer + "_presim_avg"] = np.mean(self.intermediate_kernel_status[timer])
+                    d[timer + "_presim_all"] = self.intermediate_kernel_status[timer]
+                except TypeError:
+                    # No threaded timers, fall back to scalar handling
+                    d[timer] -= self.intermediate_kernel_status[timer]
+                    d[timer + '_presim'] = self.intermediate_kernel_status[timer]
+            except KeyError:
+                # KeyError if compiled without detailed timers, except time_simulate
+                continue
+
+        for timer in other_timers:
+            try:
+                try:
+                    timer_array = d[timer]
+                    d[timer] = timer_array[0]
+                    d[timer + "_max"] = max(timer_array)
+                    d[timer + "_min"] = min(timer_array)
+                    d[timer + "_mean"] = np.mean(timer_array)
+                    d[timer + "_all"] = timer_array
+                except TypeError:
+                    # No threaded timers, d[timer] is already a scalar and is set after nest.kernel_status
+                    continue
+            except KeyError:
+                # KeyError if compiled without detailed timers, except time_simulate
+                continue
         print(d)
+
+        nest.Cleanup()
+
 
         fn = os.path.join(self.data_dir,
                           'recordings',
@@ -649,49 +665,44 @@ def connect(simulation,
                              source_area.name)
     for target in target_area.populations:
         for source in source_area.populations:
+            conn_spec = {'rule': 'fixed_total_number',
+                         'N': int(synapses[target][source])}
 
-            # Number of synapses
-            number_of_synapses = math.ceil(synapses[target][source])
-
-            if number_of_synapses > 0:
-                conn_spec = {'rule': 'fixed_total_number',
-                             'N': int(synapses[target][source])}
-
-                if target_area == source_area:
-                    if 'E' in source:
-                        w_min = 0.
-                        w_max = np.inf
-                        mean_delay = network.params['delay_params']['delay_e']
-                    elif 'I' in source:
-                        w_min = -np.inf
-                        w_max = 0.
-                        mean_delay = network.params['delay_params']['delay_i']
-                else:
+            if target_area == source_area:
+                if 'E' in source:
                     w_min = 0.
                     w_max = np.inf
-                    v = network.params['delay_params']['interarea_speed']
-                    s = network.distances[target_area.name][source_area.name]
-                    mean_delay = s / v
+                    mean_delay = network.params['delay_params']['delay_e']
+                elif 'I' in source:
+                    w_min = -np.inf
+                    w_max = 0.
+                    mean_delay = network.params['delay_params']['delay_i']
+            else:
+                w_min = 0.
+                w_max = np.inf
+                v = network.params['delay_params']['interarea_speed']
+                s = network.distances[target_area.name][source_area.name]
+                mean_delay = s / v
 
-                syn_spec = {
-                    'synapse_model': 'static_synapse',
-                    'weight': nest.math.redraw(
-                        nest.random.normal(
-                            mean=W[target][source],
-                            std=W_sd[target][source]
-                            ),
-                        min=w_min,
-                        max=w_max
+            syn_spec = {
+                'synapse_model': 'static_synapse',
+                'weight': nest.math.redraw(
+                    nest.random.normal(
+                        mean=W[target][source],
+                        std=W_sd[target][source]
                         ),
-                    'delay': nest.math.redraw(
-                        nest.random.normal(
-                            mean=mean_delay,
-                            std=mean_delay * network.params['delay_params']['delay_rel']
-                            ),
-                        min=simulation.params['dt'] - 0.5 * nest.resolution,
-                        max=np.Inf)}
+                    min=w_min,
+                    max=w_max
+                    ),
+                'delay': nest.math.redraw(
+                    nest.random.normal(
+                        mean=mean_delay,
+                        std=mean_delay * network.params['delay_params']['delay_rel']
+                        ),
+                    min=simulation.params['dt'] - 0.5 * nest.resolution,
+                    max=np.Inf)}
 
-                nest.Connect(source_area.gids[source],
-                             target_area.gids[target],
-                             conn_spec,
-                             syn_spec)
+            nest.Connect(source_area.gids[source],
+                         target_area.gids[target],
+                         conn_spec,
+                         syn_spec)

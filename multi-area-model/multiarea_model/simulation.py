@@ -87,7 +87,6 @@ class Simulation:
         d = {'sim_params': self.custom_params,
              'network_params': self.network.custom_params,
              'network_label': self.network.label}
-        print(f"Dumping custom_params to {self.data_dir}")
         with open(os.path.join(self.data_dir,
                                'custom_params'), 'w') as f:
             json.dump(d, f)
@@ -163,7 +162,10 @@ class Simulation:
                               'rng_seeds': list(range(master_seed + 1,
                                                       master_seed + vp + 1))})
 
-        nest.set_verbosity('M_INFO')
+        try:
+            nest.verbosity = nest.VerbosityLevel.INFO
+        except AttributeError:
+            nest.set_verbosity('M_INFO')
 
         nest.SetDefaults(self.network.params['neuron_params']['neuron_model'],
                          self.network.params['neuron_params']['single_neuron_dict'])
@@ -339,9 +341,12 @@ class Simulation:
         Use NEST's memory wrapper function to record used memory.
         """
         try:
-            mem = nest.ll_api.sli_func('memory_thisjob')
-        except AttributeError:
-            mem = nest.sli_func('memory_thisjob')
+            nest.get("memory_size")
+        except KeyError:
+            try:
+                mem = nest.ll_api.sli_func('memory_thisjob')
+            except AttributeError:
+                mem = nest.sli_func('memory_thisjob')
         if isinstance(mem, dict):
             return mem['heap']
         else:
