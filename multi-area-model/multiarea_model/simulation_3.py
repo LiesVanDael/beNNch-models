@@ -663,12 +663,8 @@ def connect(simulation,
             number_of_synapses = math.ceil(network.synapses[target_area.name][target][source_area.name][source])
 
             if number_of_synapses > 0:
-                synapses = extract_area_dict(network.synapses,
-                                             network.structure,
-                                             target_area.name,
-                                             source_area.name)
                 conn_spec = {'rule': 'fixed_total_number',
-                             'N': int(synapses[target][source])}
+                             'N': int(network.synapses[target_area.name][target][source_area.name][source])}
 
                 if target_area == source_area:
                     if 'E' in source:
@@ -686,20 +682,12 @@ def connect(simulation,
                     s = network.distances[target_area.name][source_area.name]
                     mean_delay = s / v
 
-                W = extract_area_dict(network.W,
-                                      network.structure,
-                                      target_area.name,
-                                      source_area.name)
-                W_sd = extract_area_dict(network.W_sd,
-                                         network.structure,
-                                         target_area.name,
-                                         source_area.name)
                 syn_spec = {
                     'synapse_model': 'static_synapse',
                     'weight': nest.math.redraw(
                         nest.random.normal(
-                            mean=W[target][source],
-                            std=W_sd[target][source]
+                            mean=network.W[target_area.name][target][source_area.name][source],
+                            std=network.W_sd[target_area.name][target][source_area.name][source]
                             ),
                         min=w_min,
                         max=w_max
