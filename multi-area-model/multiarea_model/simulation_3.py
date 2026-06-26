@@ -652,25 +652,18 @@ def connect(simulation,
         Source area of the projection
     """
     network = simulation.network
-    synapses = extract_area_dict(network.synapses,
-                                 network.structure,
-                                 target_area.name,
-                                 source_area.name)
-    W = extract_area_dict(network.W,
-                          network.structure,
-                          target_area.name,
-                          source_area.name)
-    W_sd = extract_area_dict(network.W_sd,
-                             network.structure,
-                             target_area.name,
-                             source_area.name)
     for target in target_area.populations:
         for source in source_area.populations:
 
             # Number of synapses
-            number_of_synapses = math.ceil(synapses[target][source])
+            #number_of_synapses = math.ceil(synapses[target][source])
+            number_of_synapses = math.ceil(synapses[target_area.name][target][source_area.name][source])
 
             if number_of_synapses > 0:
+                synapses = extract_area_dict(network.synapses,
+                                             network.structure,
+                                             target_area.name,
+                                             source_area.name)
                 conn_spec = {'rule': 'fixed_total_number',
                              'N': int(synapses[target][source])}
 
@@ -690,6 +683,14 @@ def connect(simulation,
                     s = network.distances[target_area.name][source_area.name]
                     mean_delay = s / v
 
+                W = extract_area_dict(network.W,
+                                      network.structure,
+                                      target_area.name,
+                                      source_area.name)
+                W_sd = extract_area_dict(network.W_sd,
+                                         network.structure,
+                                         target_area.name,
+                                         source_area.name)
                 syn_spec = {
                     'synapse_model': 'static_synapse',
                     'weight': nest.math.redraw(
