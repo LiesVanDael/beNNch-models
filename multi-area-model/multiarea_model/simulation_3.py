@@ -657,7 +657,7 @@ def connect(simulation,
 
             # Number of synapses
             #number_of_synapses = math.ceil(synapses[target][source])
-            number_of_synapses = math.ceil(synapses[target_area.name][target][source_area.name][source])
+            number_of_synapses = math.ceil(network.synapses[target_area.name][target][source_area.name][source])
 
             if number_of_synapses > 0:
                 synapses = extract_area_dict(network.synapses,
