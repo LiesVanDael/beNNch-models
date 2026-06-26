@@ -718,4 +718,4 @@ def connect(simulation,
                              syn_spec)
 
 connect.call_counter = 0
-connect.synapse_counter
+connect.synapse_counter = 0
