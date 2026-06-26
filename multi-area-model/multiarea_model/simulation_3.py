@@ -707,8 +707,14 @@ def connect(simulation,
                             ),
                         min=simulation.params['dt'] - 0.5 * nest.resolution,
                         max=np.Inf)}
+                
+                connect.call_counter += 1
+                connect.synapse_counter += number_of_synapses
 
                 nest.Connect(source_area.gids[source],
                              target_area.gids[target],
                              conn_spec,
                              syn_spec)
+
+connect.call_counter = 0
+connect.synapse_counter
