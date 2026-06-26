@@ -310,6 +310,9 @@ class Simulation:
         print("Created cortico-cortical connections in {0:.2f} seconds.".format(
             self.time_network_global))
 
+        print(f'Calls to connect: {connect.call_counter}')
+        print(f'Number of synapses: {connect.synapse_counter}')
+        
         self.save_network_gids()
 
         print("Network size:", nest.GetKernelStatus('network_size'))
