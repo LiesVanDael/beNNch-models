@@ -30,6 +30,8 @@ import numpy as np
 import os
 import pprint
 import shutil
+import math
+from nested_dict import nested_dict
 from .default_params_3 import complete_area_list, nested_update, network_params
 from .default_params_3 import check_custom_params
 from collections import OrderedDict
@@ -126,7 +128,7 @@ class MultiAreaModel_3:
         for area in dat['area_list']:
             self.structure[area] = dat['structure'][area]
         self.N = dat['neuron_numbers']
-        self.synapses = dat['synapses']
+        self.synapses = synapses_int(dat['synapses'])
         self.W = dat['synapse_weights_mean']
         self.W_sd = dat['synapse_weights_sd']
         self.area_list = complete_area_list
@@ -151,7 +153,7 @@ class MultiAreaModel_3:
                           self.structure['V1']} for area in self.area_list}
             self.K = matrix_to_dict(
                 K_stable, self.area_list, self.structure, external=ext)
-            self.synapses = indegree_to_synapse_numbers(self.K, self.N)
+            self.synapses = synapses_int(indegree_to_synapse_numbers(self.K, self.N))
 
         self.vectorize()
         if self.params['K_scaling'] != 1. or self.params['N_scaling'] != 1.:
@@ -267,7 +269,7 @@ class MultiAreaModel_3:
         self.W = matrix_to_dict(self.W_matrix[:, :-1], self.area_list,
                                 self.structure, external=self.W_matrix[:, -1])
 
-        self.synapses = matrix_to_dict(self.syn_matrix, self.area_list, self.structure)
+        self.synapses = synapses_int(matrix_to_dict(self.syn_matrix, self.area_list, self.structure))
 
     def vectorize(self):
         """
@@ -315,3 +317,13 @@ class MultiAreaModel_3:
         self.add_DC_drive = C_m / tau_m * ((1. - np.sqrt(K_scaling)) * (x1 + x1_ext))
         neuron_params = self.params['neuron_params']['single_neuron_dict']
         self.W_matrix = (1. / convert_syn_weight(1., neuron_params) * self.J_matrix)
+
+def synapses_int(d):
+    new_synapses = nested_dict()
+    for a_t, d1 in d.items():
+        for t, d2 in d1.items():
+            for a_s, d3 in d2.items():
+                for s, val in d3.items():
+                    val = math.ceil(val)
+                    new_synapses[a_t][t][a_s][s] = val
+    return new_synapses.to_dict()

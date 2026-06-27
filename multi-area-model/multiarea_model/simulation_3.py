@@ -660,7 +660,8 @@ def connect(simulation,
 
             # Number of synapses
             #number_of_synapses = math.ceil(synapses[target][source])
-            number_of_synapses = math.ceil(network.synapses[target_area.name][target][source_area.name][source])
+            number_of_synapses = network.synapses[target_area.name][target][source_area.name][source]
+            print(f"type number_of_synapses (should be int): {type(number_of_synapses)}")
 
             if number_of_synapses > 0:
                 conn_spec = {'rule': 'fixed_total_number',
