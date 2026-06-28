@@ -655,16 +655,27 @@ def connect(simulation,
         Source area of the projection
     """
     network = simulation.network
+    synapses = extract_area_dict(network.synapses,
+                                 network.structure,
+                                 target_area.name,
+                                 source_area.name)
+    W = extract_area_dict(network.W,
+                          network.structure,
+                          target_area.name,
+                          source_area.name)
+    W_sd = extract_area_dict(network.W_sd,
+                             network.structure,
+                             target_area.name,
+                             source_area.name)
     for target in target_area.populations:
         for source in source_area.populations:
 
             # Number of synapses
-            #number_of_synapses = math.ceil(synapses[target][source])
-            number_of_synapses = network.synapses[target_area.name][target][source_area.name][source]
+            number_of_synapses = math.ceil(synapses[target][source])
 
             if number_of_synapses > 0:
                 conn_spec = {'rule': 'fixed_total_number',
-                             'N': int(network.synapses[target_area.name][target][source_area.name][source])}
+                             'N': int(synapses[target][source])}
 
                 if target_area == source_area:
                     if 'E' in source:
@@ -686,8 +697,8 @@ def connect(simulation,
                     'synapse_model': 'static_synapse',
                     'weight': nest.math.redraw(
                         nest.random.normal(
-                            mean=network.W[target_area.name][target][source_area.name][source],
-                            std=network.W_sd[target_area.name][target][source_area.name][source]
+                            mean=W[target][source],
+                            std=W_sd[target][source]
                             ),
                         min=w_min,
                         max=w_max
