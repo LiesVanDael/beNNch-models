@@ -368,7 +368,6 @@ class MultiAreaModel:
             tau_syn_ex = self.params['neuron_params']['single_neuron_dict']['tau_syn_ex']
             C_m = self.params['neuron_params']['single_neuron_dict']['C_m']
 
-            # LVD 
             self.J = nested_dict()
             for t_area, d1 in self.W.items():
                 for t_layer, d2 in d1.items():
@@ -569,18 +568,6 @@ class MultiAreaModel:
                             area_list_fn)
             elif isinstance(network_spec, str):
                 assert(network_spec == self.data_folder_hash)
-            CLUSTER = self.params['cluster']
-
-            CLUSTER['pulvinar'] = deepcopy(CLUSTER['cluster_stim'])
-            
-            self.W = clusterize_4(self.W, CLUSTER)
-            self.K = clusterize_4(self.K, CLUSTER, K=True) # TODO
-            self.N = clusterize_2(self.N, CLUSTER) # TODO: CLUSTER
-            self.synapses = clusterize_4(self.synapses, CLUSTER, syn=True)
-            self.J = clusterize_4(self.J, CLUSTER)
-            
-            self.W = apply_clustering_strengths(self.W, CLUSTER, self.params) # TODO: check whether right params
-            self.J = apply_clustering_strengths(self.J, CLUSTER, self.params)
 
         else:
             print("Initializing network from label.")
@@ -1024,7 +1011,7 @@ def clusterize_4(d, cluster_params, syn=False, K=False):
                             for pop_s, d6 in d5.items():
                                 val = d6 * divider
                                 if syn:
-                                    val = int(math.ceil(val))
+                                    val = math.ceil(val)
                                 if pop_s == 'E' or pop_s == 'I':
                                     for c1 in cluster_s:
                                         new_dict[a_t][layer_t][pop_t][c0][a_s][layer_s][pop_s][c1] = val

@@ -463,17 +463,11 @@ class Simulation:
             for area in self.areas:
                 for layer, d1 in self.network.N[area.name].items():
                     for pop, d2 in d1.items():
-                        for cluster in d2:
-                            if self.network.params['USING_NEST_3']:
-                                first_id = area.gids[(layer, pop, cluster)][0].get()['global_id']
-                                last_id = area.gids[(layer, pop, cluster)][-1].get()['global_id']
-                            else:
-                                first_id = area.gids[(layer, pop, cluster)][0]
-                                last_id = area.gids[(layer, pop, cluster)][1]
-                            f.write("{area},{layer},{pop},{cluster},{g0},{g1}\n".format(area=area.name,
+                        first_id = area.gids[(layer, pop)][0].get()['global_id']
+                        last_id = area.gids[(layer, pop)][-1].get()['global_id']
+                        f.write("{area},{layer},{pop},{g0},{g1}\n".format(area=area.name,
                                                                                         layer=layer,
                                                                                         pop=pop,
-                                                                                        cluster=cluster,
                                                                                         g0=first_id,
                                                                                         g1=last_id))
 
@@ -484,16 +478,11 @@ class Simulation:
             for area in self.areas:
                 for layer, d1 in self.network.N[area.name].items():
                     for pop, d2 in d1.items():
-                        for cluster in d2:
-                            if self.network.params['USING_NEST_3']:
-                                gid = area.microstimulation_gid.get()['global_id']
-                            else:
-                                gid = area.microstimulation_gid
-                            f.write("{area},{layer},{pop},{cluster},{g0}\n".format(area=area.name,
-                                                                                   layer=layer,
-                                                                                   pop=pop,
-                                                                                   cluster=cluster,
-                                                                                   g0=gid))
+                        gid = area.cluster_stimulation_gid[(layer, pop)].get()['global_id']
+                        f.write("{area},{layer},{pop},{g0}\n".format(area=area.name,
+                                                                               layer=layer,
+                                                                               pop=pop,
+                                                                               g0=gid))
 
     def save_cluster_stim_gids(self):
         with open(os.path.join(self.data_dir,
@@ -502,16 +491,11 @@ class Simulation:
             for area in self.areas:
                 for layer, d1 in self.network.N[area.name].items():
                     for pop, d2 in d1.items():
-                        for cluster in d2:
-                            if self.network.params['USING_NEST_3']:
-                                gid = area.cluster_stimulation_gid[(layer, pop, cluster)].get()['global_id']
-                            else:
-                                gid = area.cluster_stimulation_gid[(layer, pop, cluster)]
-                            f.write("{area},{layer},{pop},{cluster},{g0}\n".format(area=area.name,
-                                                                                   layer=layer,
-                                                                                   pop=pop,
-                                                                                   cluster=cluster,
-                                                                                   g0=gid))
+                        gid = area.pulvinar_gid[(layer, pop)].get()['global_id']
+                        f.write("{area},{layer},{pop},{g0}\n".format(area=area.name,
+                                                                               layer=layer,
+                                                                               pop=pop,
+                                                                               g0=gid))
 
     def save_pulvinar_gids(self):
         with open(os.path.join(self.data_dir,
@@ -573,11 +557,31 @@ class Area:
         self.populations = []
         for t_layer, d1 in self.synapses.items():
             for t_pop, d2 in d1.items():
-                for t_cluster in d2:
-                    self.populations.append((t_layer, t_pop, t_cluster)) 
+                self.populations.append((t_layer, t_pop)) 
 
-        self.K_per_target_area = self.network.K[self.name]   
+        self.K_per_target_area = self.network.K[self.name]
+        self.external_synapses = {t_layer: {t_pop: self.network.K[self.name][t_layer][t_pop]['external']['external']['external'] 
+                                            for t_pop in self.network.K[self.name][t_layer]
+                                            }
+                                  for t_layer in self.network.K[self.name]
+                                  }
+         
+        self.stim_synapses = {t_layer: {t_pop: self.network.K[self.name][t_layer][t_pop]['stim']['stim']['stim']
+                                            for t_pop in self.network.K[self.name][t_layer]
+                                            }
+                                  for t_layer in self.network.K[self.name]
+                                  }
 
+        self.K_cluster_stim = {t_layer: {t_pop: self.network.K[self.name][t_layer][t_pop]['cluster_stim']['cluster_stim']['cluster_stim']
+                                            for t_pop in self.network.K[self.name][t_layer]
+                                         }
+                                  for t_layer in self.network.K[self.name]
+                                  }
+        self.K_pulvinar = {t_layer: {t_pop: self.network.K[self.name][t_layer][t_pop]['pulvinar']['pulvinar']['pulvinar']
+                                        for t_pop in self.network.K[self.name][t_layer]
+                                            }
+                                  for t_layer in self.network.K[self.name]
+                                  }
         self.create_populations()
         self.connect_devices()
         self.connect_populations()
@@ -606,12 +610,16 @@ class Area:
         self.gids = {}
         self.num_local_nodes = 0
         for pop in self.populations:
+            layer, population = pop
+            total_neurons = self.neuron_numbers[layer][population]
             gid = nest.Create(self.network.params['neuron_params']['neuron_model'],
-                              math.ceil(self.neuron_numbers[pop[0]][pop[1]][pop[2]]))
-            I_e = self.network.add_DC_drive[self.name][pop[0]][pop[1]]#[pop[2]]
+                              math.ceil(total_neurons))
+            I_e = self.network.add_DC_drive[self.name][layer][population]
             if not self.network.params['input_params']['poisson_input']:
-                K_ext = self.K_per_target_area[pop[0]][pop[1]][pop[2]]['external']['external']['external']['external']
-                W_ext = self.network.W[self.name][pop[0]][pop[1]]['external']['external']['external']
+                # Sum external synapses across all clusters
+                K_ext = self.external_synapses[layer][population]
+                
+                W_ext = self.network.W[self.name][layer][population]['external']['external']['external']
                 tau_syn = self.network.params['neuron_params']['single_neuron_dict']['tau_syn_ex']
                 DC = K_ext * W_ext * tau_syn * 1.e-3 * \
                     self.network.params['rate_ext']
@@ -619,7 +627,7 @@ class Area:
             nest.SetStatus(gid, {'I_e': I_e})
 
             # Store GIDCollection of each population
-            self.gids[pop] = gid
+            self.gids[(layer, population)] = gid
             # Initialize membrane potentials
             # This could also be done after creating all areas, which
             # might yield better performance. Has to be tested.
@@ -647,53 +655,38 @@ class Area:
                 record_step = max(1, int(math.ceil(1.0 / spk_rec_fraction)))
 
             for pop in self.populations:
+                layer, population = pop
                 if reduced == False:
                     # Always record spikes from all neurons to get correct
                     # statistics
-                    if self.network.params['USING_NEST_3']:
-                        nest.Connect(self.gids[pop],
-                                     self.simulation.spike_detector)
-                    else:
-                        nest.Connect(tuple(range(self.gids[pop][0], self.gids[pop][1] + 1)),
-                                     self.simulation.spike_detector)
+                    nest.Connect(self.gids[(layer, population)],
+                                 self.simulation.spike_detector)
                 else:
                     # Only record from a fraction of the neurons to reduce data volume
-                    if self.network.params['USING_NEST_3']:
-                        nest.Connect(self.gids[pop][::record_step],
-                                     self.simulation.spike_detector)
-                    else:
-                        raise RuntimeError(
-                                "Recording only a fraction of neurons is only supported in NEST 3."
-                                )
+                    nest.Connect(self.gids[(layer, population)][::record_step],
+                                 self.simulation.spike_detector)
 
         if self.simulation.params['recording_dict']['record_vm']:
             for pop in self.populations:
-                nrec = int(self.simulation.params['recording_dict']['Nrec_vm_fraction'] *
-                           self.neuron_numbers[pop[0]][pop[1]][pop[2]])
-                if self.network.params['USING_NEST_3']:
-                    nest.Connect(self.simulation.voltmeter,
-                                 self.gids[pop][:nrec])
-                else:
-                    nest.Connect(self.simulation.voltmeter,
-                                 tuple(range(self.gids[pop][0], self.gids[pop][0] + nrec + 1)))
+                layer, population = pop
+                total_neurons = self.neuron_numbers[layer][population]
+                nrec = int(self.simulation.params['recording_dict']['Nrec_vm_fraction'] * total_neurons)
+                nest.Connect(self.simulation.voltmeter,
+                             self.gids[(layer, population)][:nrec])
+
         if self.network.params['input_params']['poisson_input']:
             self.poisson_generators = []
-            for pop in self.populations: # LVD
-                K_ext = self.K_per_target_area[pop[0]][pop[1]][pop[2]]['external']['external']['external']['external']
-                W_ext = self.network.W[self.name][pop[0]][pop[1]][pop[2]]['external']['external']['external']['external']
+            for pop in self.populations:
+                layer, population = pop
+                K_ext = self.external_synapses[layer][population] 
+                W_ext = self.network.W[self.name][layer][population]['external']['external']['external']
                 pg = nest.Create('poisson_generator')
                 nest.SetStatus(
-                    pg, {'rate': self.network.rates[self.name][pop[0]][pop[1]] * K_ext}) # LVD 
+                    pg, {'rate': self.network.rates[self.name][layer][population] * K_ext})
                 syn_spec = {'weight': W_ext}
-                if self.network.params['USING_NEST_3']:
-                    nest.Connect(pg,
-                                 self.gids[pop],
-                                 syn_spec=syn_spec)
-                else:
-                    nest.Connect(pg,
-                                 tuple(
-                                     range(self.gids[pop][0], self.gids[pop][1] + 1)),
-                                 syn_spec=syn_spec)
+                nest.Connect(pg,
+                             self.gids[(layer, population)],
+                             syn_spec=syn_spec)
                 self.poisson_generators.append(pg[0])
 
     def connect_microstimulation(self):
@@ -701,9 +694,10 @@ class Area:
         if nest.Rank() == 0:
             print('Microstimulation connection established')
         for pop in self.populations:
-            K_stim = self.K_per_target_area[pop[0]][pop[1]][pop[2]]['stim']['stim']['stim']['stim'] # LVD
-            W_stim = self.network.W[self.name][pop[0]][pop[1]][pop[2]]['stim']['stim']['stim']['stim'] # LVD
-            W_stim_sd = self.network.W_sd[self.name][pop[0]][pop[1]]['stim']['stim']['stim'] # LVD
+            layer, population = pop
+            K_stim = self.stim_synapses[layer][population]
+            W_stim = self.network.W[self.name][layer][population]['stim']['stim']['stim']
+            W_stim_sd = self.network.W_sd[self.name][layer][population]['stim']['stim']['stim']
             self.stop_stim = (self.stim_area_params['stim_start'] +
                               self.stim_area_params['stim_duration'])
 
@@ -721,7 +715,6 @@ class Area:
                 print('area', self.name)
                 print('layer', pop[0])
                 print('population', pop[1])
-                print('cluster', pop[2])
                 print('rate', self.stim_area_params['stim_rate'])
             
             syn_spec = {
@@ -732,21 +725,10 @@ class Area:
                         )
                       }
 
-            if self.network.params['USING_NEST_3']:
-                nest.Connect(poisson_stim,
-                             self.gids[pop],
-                             syn_spec=syn_spec
-                             )
-            else:
-                nest.Connect(poisson_stim,
-                             tuple(
-                                 range(
-                                     self.gids[pop][0], 
-                                     self.gids[pop][1] + 1
-                                     )
-                                 ),
-                             syn_spec=syn_spec
-                             )
+            nest.Connect(poisson_stim,
+                         self.gids[(layer, population)],
+                         syn_spec=syn_spec
+                         )
 
     def connect_cluster_stimulation(self):
         """ Connects the microstimulation population to the corresponding areas."""
@@ -755,15 +737,14 @@ class Area:
         self.cluster_stimulation_gid = {}
         for pop in self.populations:
             # pop contains layer, population, cluster
-            layer, population, cluster = pop
-            #layer, population = pop # LVD
-            K = self.K_per_target_area[pop[0]][pop[1]][pop[2]]['cluster_stim']['cluster_stim']['cluster_stim']['cluster_stim']
-            W = self.network.W[self.name][pop[0]][pop[1]][pop[2]]['cluster_stim']['cluster_stim']['cluster_stim']['cluster_stim'] # LVD
-            W_sd = self.network.W_sd[self.name][pop[0]][pop[1]]['cluster_stim']['cluster_stim']['cluster_stim'] # LVD
+            layer, population = pop
+            K = self.K_cluster_stim[layer][population]
+            W = self.network.W[self.name][layer][population]['cluster_stim']['cluster_stim']['cluster_stim']
+            W_sd = self.network.W_sd[self.name][layer][population]['cluster_stim']['cluster_stim']['cluster_stim']
 
-            stim_start = self.cluster_stimulation_params[cluster]['stim_start']
-            stim_rate = self.cluster_stimulation_params[cluster]['stim_rate']
-            stim_duration = self.cluster_stimulation_params[cluster]['stim_duration']
+            stim_start = self.cluster_stimulation_params['0']['stim_start']
+            stim_rate = self.cluster_stimulation_params['0']['stim_rate']
+            stim_duration = self.cluster_stimulation_params['0']['stim_duration']
 
             if isinstance(stim_rate, list):
                 # stim_rate and stim_start have to be lists of the same length
@@ -776,7 +757,7 @@ class Area:
                 rate = [r * K for r in stim_rate]
 
                 poisson_stim = nest.Create('inhomogeneous_poisson_generator')
-                self.cluster_stimulation_gid[pop] = poisson_stim[0]
+                self.cluster_stimulation_gid[(layer, population)] = poisson_stim[0]
                 nest.SetStatus(
                     poisson_stim, {
                         'rate_times': stim_start,
@@ -787,7 +768,6 @@ class Area:
                     print('area', self.name)
                     print('layer', layer)
                     print('population', population)
-                    print('cluster', cluster)
                     print('rate', rate)
                     print('stim_start', stim_start)
             else:
@@ -796,7 +776,7 @@ class Area:
                 rate = stim_rate * K
 
                 poisson_stim = nest.Create('poisson_generator')
-                self.cluster_stimulation_gid[pop] = poisson_stim[0]
+                self.cluster_stimulation_gid[(layer, population)] = poisson_stim[0]
                 nest.SetStatus(
                     poisson_stim, {
                         'rate': rate,
@@ -809,7 +789,6 @@ class Area:
                     print('area', self.name)
                     print('layer', layer)
                     print('population', population)
-                    print('cluster', cluster)
                     print('rate', stim_rate)
             
             syn_spec = {
@@ -820,21 +799,10 @@ class Area:
                         )
                       }
 
-            if self.network.params['USING_NEST_3']:
-                nest.Connect(poisson_stim,
-                             self.gids[pop],
-                             syn_spec=syn_spec
-                             )
-            else:
-                nest.Connect(poisson_stim,
-                             tuple(
-                                 range(
-                                     self.gids[pop][0],
-                                     self.gids[pop][1] + 1
-                                     )
-                                 ),
-                             syn_spec=syn_spec
-                             )
+            nest.Connect(poisson_stim,
+                         self.gids[(layer, population)],
+                         syn_spec=syn_spec
+                         )
 
     def connect_pulvinar_stimulation(self):
         """ Connects the pulvinar population to the corresponding areas."""
@@ -843,14 +811,14 @@ class Area:
         self.pulvinar_gid = {}
         for pop in self.populations:
             # pop contains layer, population, cluster
-            layer, population, cluster = pop
-            K = self.K_per_target_area[pop[0]][pop[1]][pop[2]]['pulvinar']['pulvinar']['pulvinar']['pulvinar'] # LVD
-            W = self.network.W[self.name][pop[0]][pop[1]][pop[2]]['pulvinar']['pulvinar']['pulvinar']['pulvinar']
-            W_sd = self.network.W_sd[self.name][pop[0]][pop[1]]['pulvinar']['pulvinar']['pulvinar']
+            layer, population = pop
+            K = self.K_pulvinar[layer][population]
+            W = self.network.W[self.name][layer][population]['pulvinar']['pulvinar']['pulvinar']
+            W_sd = self.network.W_sd[self.name][layer][population]['pulvinar']['pulvinar']['pulvinar']
 
-            stim_start = self.pulvinar_params[cluster]['stim_start']
-            stim_rate = self.pulvinar_params[cluster]['stim_rate']
-            stim_duration = self.pulvinar_params[cluster]['stim_duration']
+            stim_start = self.pulvinar_params['0']['stim_start']
+            stim_rate = self.pulvinar_params['0']['stim_rate']
+            stim_duration = self.pulvinar_params['0']['stim_duration']
             if isinstance(stim_rate, list):
                 # stim_rate and stim_start have to be lists of the same length
                 # stim_duration is not needed in this case
@@ -862,7 +830,7 @@ class Area:
                 rate = [r * K for r in stim_rate]
 
                 poisson_stim = nest.Create('inhomogeneous_poisson_generator')
-                self.pulvinar_gid[pop] = poisson_stim[0]
+                self.pulvinar_gid[(layer, population)] = poisson_stim[0]
                 nest.SetStatus(
                     poisson_stim, {
                         'rate_times': stim_start,
@@ -873,7 +841,6 @@ class Area:
                     print('area', self.name)
                     print('layer', layer)
                     print('population', population)
-                    print('cluster', cluster)
                     print('rate', rate)
                     print('stim_start', stim_start)
             else:
@@ -882,7 +849,7 @@ class Area:
                 rate = stim_rate * K
 
                 poisson_stim = nest.Create('poisson_generator')
-                self.pulvinar_gid[pop] = poisson_stim[0]
+                self.pulvinar_gid[(layer, population)] = poisson_stim[0]
                 nest.SetStatus(
                     poisson_stim, {
                         'rate': rate,
@@ -895,7 +862,6 @@ class Area:
                     print('area', self.name)
                     print('layer', layer)
                     print('population', population)
-                    print('cluster', cluster)
                     print('rate', stim_rate)
                     print('stim_start', stim_start)
             
@@ -907,21 +873,10 @@ class Area:
                           )
                         }
 
-            if self.network.params['USING_NEST_3']:
-                nest.Connect(poisson_stim,
-                             self.gids[pop],
-                             syn_spec=syn_spec
-                             )
-            else:
-                nest.Connect(poisson_stim,
-                             tuple(
-                                 range(
-                                     self.gids[pop][0],
-                                     self.gids[pop][1] + 1
-                                     )
-                                 ),
-                             syn_spec=syn_spec
-                             )
+            nest.Connect(poisson_stim,
+                         self.gids[(layer, population)],
+                         syn_spec=syn_spec
+                         )
 
     def create_additional_input(self, input_type, source_area_name, cc_input):
         """
@@ -942,7 +897,7 @@ class Area:
             Dictionary of cortico-cortical input of the process
             replacing the source area.
         """
-        synapses = extract_area_dict(self.network.synapses, 
+        synapses = extract_area_dict(self.network.synapses, #TODO: why is this function used here
                                      self.network.structure,
                                      self.name,
                                      source_area_name)
@@ -955,10 +910,14 @@ class Area:
         s = self.network.distances[self.name][source_area_name]
         delay = s / v
         for pop in self.populations:
+            layer, population = pop
             for source_pop in self.network.structure[source_area_name]:
-                syn_spec = {'weight': W[''.join(pop[:-1])][source_pop],
+                target_key = f"{layer}{population}"
+                syn_spec = {'weight': W[target_key][source_pop],
                             'delay': delay}
-                K = synapses[''.join(pop[:-1])][source_pop] / sum(self.neuron_numbers[pop[0]][pop[1]].values()) # LVD
+                # Sum K across all clusters and normalize by total neurons
+                total_neurons = self.neuron_numbers[layer][population]
+                K = synapses[target_key][source_pop] / total_neurons
                 if input_type == 'het_current_nonstat':
                     curr_gen = nest.Create('step_current_generator')
                     dt = self.simulation.params['dt']
@@ -968,27 +927,15 @@ class Area:
                                               'amplitude_times': np.arange(dt,
                                                                            T + dt,
                                                                            1.)})
-                    if self.network.params['USING_NEST_3']:
-                        nest.Connect(curr_gen,
-                                     self.gids[pop],
-                                     syn_spec=syn_spec)
-                    else:
-                        nest.Connect(curr_gen,
-                                     tuple(
-                                         range(self.gids[pop][0], self.gids[pop][1] + 1)),
-                                     syn_spec=syn_spec)
+                    nest.Connect(curr_gen,
+                                 self.gids[(layer, population)],
+                                 syn_spec=syn_spec)
                 elif 'poisson_stat' in input_type:  # hom. and het. poisson lead here
                     pg = nest.Create('poisson_generator')
                     nest.SetStatus(pg, {'rate': K * cc_input[source_pop]})
-                    if self.network.params['USING_NEST_3']:
-                        nest.Connect(pg,
-                                     self.gids[pop],
-                                     syn_spec=syn_spec)
-                    else:
-                        nest.Connect(pg,
-                                     tuple(
-                                         range(self.gids[pop][0], self.gids[pop][1] + 1)),
-                                     syn_spec=syn_spec)
+                    nest.Connect(pg,
+                                 self.gids[(layer, population)],
+                                 syn_spec=syn_spec)
 
 def connect(simulation,
             target_area,
@@ -1007,21 +954,27 @@ def connect(simulation,
         Source area of the projection
     """
     network = simulation.network
+
+    cluster_cc_connections = network.params['connection_params']['cluster_cc_connections'] # cluster connections across areas
     
-    for (layer_t, pop_t, c_t) in target_area.populations:
-        for (layer_s, pop_s, c_s) in source_area.populations:
+    for (layer_t, pop_t) in target_area.populations:
+        for (layer_s, pop_s) in source_area.populations:
 
             # Number of synapses
             number_of_synapses = math.ceil(
-                network.synapses[target_area.name][layer_t][pop_t][c_t]
-                                [source_area.name][layer_s][pop_s][c_s]
-            )
+                network.synapses[target_area.name][layer_t][pop_t][source_area.name][layer_s][pop_s]
+                )
 
             if number_of_synapses > 0:
-                conn_spec = {'rule': 'fixed_total_number',
-                             'N': number_of_synapses}
+                conn_spec = {'rule': 'clustered_fixed_total_number',
+                             'N': number_of_synapses,
+                             'num_clusters': network.params['connection_params']['Q']}
                 
                 if target_area == source_area:
+                    J_E_plus = network.params['cluster'][target_area.name]['J_E_plus']
+                    J_E_minus = network.params['cluster'][target_area.name]['J_E_minus']
+                    J_I_plus = network.params['cluster'][target_area.name]['J_I_plus'] 
+                    J_I_minus = network.params['cluster'][target_area.name]['J_I_minus']
                     if pop_s == 'E':
                         w_min = 0.
                         w_max = np.inf
@@ -1036,24 +989,32 @@ def connect(simulation,
                     v = network.params['delay_params']['interarea_speed']
                     s = network.distances[target_area.name][source_area.name]
                     mean_delay = s / v
+                    if cluster_cc_connections:
+                        J_E_plus = network.params['connection_params']['cc_J_E_plus']
+                        J_E_minus = network.params['connection_params']['cc_J_E_minus']
+                        J_I_plus = network.params['connection_params']['cc_J_I_plus']
+                        J_I_minus = network.params['connection_params']['cc_J_I_minus']
+                    else:
+                        J_E_plus = 1.
+                        J_E_minus = 1.
+                        J_I_plus = 1.
+                        J_I_minus = 1.
 
                 # Mean synaptic weight
-                mean_weight = network.W[target_area.name][layer_t][pop_t][c_t][source_area.name][layer_s][pop_s][c_s]
+                mean_weight = network.W[target_area.name][layer_t][pop_t][source_area.name][layer_s][pop_s]
+                if pop_t == 'E' and pop_s == 'E':
+                    mean_weight_plus = mean_weight*J_E_plus
+                    mean_weight_minus = mean_weight*J_E_minus
+                else:
+                    mean_weight_plus = mean_weight*J_I_plus
+                    mean_weight_minus = mean_weight*J_I_minus
+
                 
                 # Standard deviation of weight
                 std_weight = network.W_sd[target_area.name][layer_t][pop_t][source_area.name][layer_s][pop_s]
 
                 syn_spec = {
                     'synapse_model': 'static_synapse',
-                    'weight': nest.math.redraw(
-                        nest.random.normal(
-                            mean=mean_weight,
-                            std=std_weight
-                            ),
-                        min=w_min,
-                        max=w_max
-                        ),
-                    
                     'delay': nest.math.redraw(
                         nest.random.normal(
                             mean=mean_delay,
@@ -1064,18 +1025,27 @@ def connect(simulation,
                
                 connect.call_counter += 1
                 connect.synapse_counter += number_of_synapses
-                if network.params['USING_NEST_3']:
-                    nest.Connect(source_area.gids[(layer_s, pop_s, c_s)], # source # test # LVD 
-                                 target_area.gids[(layer_t, pop_t, c_t)], # target # test # LVD
-                                 conn_spec,
-                                 syn_spec)
-                else:
-                    nest.Connect(tuple(range(source_area.gids[(layer_s, pop_s, c_s)][0],
-                                             source_area.gids[(layer_s, pop_s, c_s)][1] + 1)),
-                                 tuple(range(target_area.gids[(layer_t, pop_t, c_t)][0],
-                                             target_area.gids[(layer_t, pop_t, c_t)][1] + 1)),
-                                 conn_spec,
-                                 syn_spec)
+
+                nest.Connect(source_area.gids[(layer_s, pop_s)], #TODO remove cluster
+                             target_area.gids[(layer_t, pop_t)],
+                             conn_spec,
+                             nest.CollocatedSynapses({**syn_spec, 
+                                                      'weight': nest.math.redraw(
+                                                          nest.random.normal(
+                                                          mean=mean_weight_plus,
+                                                          std=std_weight
+                                                          ),
+                                                      min=w_min,
+                                                      max=w_max
+                                                      )},
+                             {**syn_spec, 'weight': nest.math.redraw(
+                                 nest.random.normal(
+                                     mean=mean_weight_minus,
+                                     std=std_weight
+                                     ),
+                                 min=w_min,
+                                 max=w_max)}),
+                             )
 
 connect.call_counter = 0
 connect.synapse_counter = 0
