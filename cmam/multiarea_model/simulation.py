@@ -197,13 +197,13 @@ class Simulation:
             status_dict.update({'label': label})
             nest.SetStatus(self.voltmeter, status_dict)
 
-    def create_areas(self): # LVD
+    def create_areas(self):
         """
         Create all areas with their populations and internal connections.
         """
         self.areas = []
         for area_name in self.areas_simulated:
-            a = Area(self, self.network, area_name) # LVD
+            a = Area(self, self.network, area_name)
             self.areas.append(a)
             print("Memory after {0} : {1:.2f} MB".format(area_name, self.memory() / 1024.))
 
@@ -523,7 +523,7 @@ class Simulation:
                                 'runtime cannot be registered.')
 
 class Area:
-    def __init__(self, simulation, network, name): # LVD
+    def __init__(self, simulation, network, name):
         """
         Area class.
         This class encapsulates a single area of the model.
@@ -1026,7 +1026,7 @@ def connect(simulation,
                 connect.call_counter += 1
                 connect.synapse_counter += number_of_synapses
 
-                nest.Connect(source_area.gids[(layer_s, pop_s)], #TODO remove cluster
+                nest.Connect(source_area.gids[(layer_s, pop_s)],
                              target_area.gids[(layer_t, pop_t)],
                              conn_spec,
                              nest.CollocatedSynapses({**syn_spec, 
