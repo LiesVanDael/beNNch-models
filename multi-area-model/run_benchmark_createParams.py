@@ -32,8 +32,7 @@ else:
                    "metastable" state in the config file.')
 network_params, _ = NEW_SIM_PARAMS[figure][0]
 
-network_params['connection_params']['K_stable'] = os.path.join(
-    base_path, 'K_stable.npy')
+network_params['connection_params']['K_stable'] = None #os.path.join(base_path, 'K_stable.npy')
 network_params['N_scaling'] = N_scaling
 network_params['K_scaling'] = K_scaling
 network_params['fullscale_rates'] = os.path.join(
