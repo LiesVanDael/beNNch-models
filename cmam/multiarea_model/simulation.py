@@ -966,7 +966,7 @@ def connect(simulation,
                 )
 
             if number_of_synapses > 0:
-                conn_spec = {'rule': 'clustered_fixed_total_number',
+                conn_spec = {'rule': 'alt_clustered_fixed_total_number',
                              'N': number_of_synapses,
                              'num_clusters': network.params['connection_params']['Q']}
                 
