@@ -130,7 +130,7 @@ class MultiAreaModel_3:
         for area in dat['area_list']:
             self.structure[area] = dat['structure'][area]
         self.N = dat['neuron_numbers']
-        self.synapses = synapses_int(dat['synapses'])
+        self.synapses = dat['synapses']
         self.W = dat['synapse_weights_mean']
         self.W_sd = dat['synapse_weights_sd']
         self.area_list = complete_area_list
@@ -155,8 +155,7 @@ class MultiAreaModel_3:
             ext = {area: {pop: ind[area][pop]['external'] for pop in
                           self.structure['V1']} for area in self.area_list}
             self.K = matrix_to_dict(
-                K_stable, self.area_list, self.structure, external=ext)
-            self.synapses = remove_TH_layer_4(zero_small_values(synapses_int(indegree_to_synapse_numbers(self.K, self.N)), tol=1e-12))
+                    K_stable, self.area_list, self.structure, external=ext)
 
         self.vectorize()
         if self.params['K_scaling'] != 1. or self.params['N_scaling'] != 1.:
