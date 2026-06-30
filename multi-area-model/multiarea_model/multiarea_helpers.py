@@ -576,3 +576,19 @@ def zero_small_values(d, tol=1e-12):
     else:
         return d
 
+def remove_TH_layer_4(d):
+    """Remove TH layer 4 of nested_dict of synapses."""
+    out = nested_dict()
+    for a_t, d1 in d.items():  # area
+        for pop_t, d2 in d1.items():
+            if a_t == 'TH' and pop_t[:-1] == '4':
+                print("Removing a layer")
+                continue
+            else:
+                print(pop_t[:-1])
+            for a_s, d3 in d2.items():
+                for pop_s, d4 in d3.items():
+                    if a_s == 'TH' and pop_s[:-1] == '4':
+                        continue
+                    out[a_t][pop_t][a_s][pop_s] = d4
+    return out
