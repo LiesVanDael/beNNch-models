@@ -310,10 +310,6 @@ class MultiAreaModel:
                         self.N,
                         ind,
                         )
-                with open('synapses_cMAM.txt', 'w') as f:
-                    f.write(str(self.synapses))
-                import sys
-                sys.exit()
 
             te = time.time()
             passed_time = round(te - ts, 3)
