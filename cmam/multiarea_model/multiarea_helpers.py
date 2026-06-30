@@ -186,7 +186,6 @@ def load_degree_data_nested_dict(N, synapses):  # N 3, synapses 6 # LVD
         outdegrees_areas.to_dict()
     )
 
-# LVD 
 def filter_nested_dict_3(d, remove_TH_layer_4=False, remove_total=False):
     """Filter nested dicts by removing TH layer 4 or 'total' entries."""
     out = {}

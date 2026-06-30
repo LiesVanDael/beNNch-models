@@ -671,11 +671,11 @@ def connect(simulation,
         for source in source_area.populations:
 
             # Number of synapses
-            number_of_synapses = math.ceil(synapses[target][source])
+            number_of_synapses = synapses[target][source]
 
             if number_of_synapses > 0:
                 conn_spec = {'rule': 'fixed_total_number',
-                             'N': int(synapses[target][source])}
+                             'N': synapses[target][source]}
 
                 if target_area == source_area:
                     if 'E' in source:
