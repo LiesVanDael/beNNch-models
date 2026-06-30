@@ -49,6 +49,7 @@ from .multiarea_helpers import (
     filter_nested_dict_3,
     filter_nested_dict_6,
     calculate_K_synapses_nested_dict,
+    zero_small_values
 )
 from .simulation import Simulation
 from .theory import Theory
@@ -302,7 +303,7 @@ class MultiAreaModel:
 
                 # Assume that the parameter defines a filename containing the matrix
                 K_stable = np.load(self.params['connection_params']['K_stable'])
-                self.K, self.synapses = calculate_K_synapses_nested_dict( # LVD 
+                self.K, self.synapses = calculate_K_synapses_nested_dict( 
                         self.synapses,
                         self.area_list,
                         self.structure,
@@ -310,6 +311,8 @@ class MultiAreaModel:
                         self.N,
                         ind,
                         )
+
+                self.synapses = zero_small_values(self.synapses, tol=1e-12)
 
             te = time.time()
             passed_time = round(te - ts, 3)
