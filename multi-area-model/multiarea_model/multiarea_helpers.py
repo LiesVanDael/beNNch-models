@@ -565,3 +565,30 @@ def convert_syn_weight(W, neuron_params):
     PSP_transform = tau_syn_ex / C_m
 
     return PSP_transform * W
+
+def zero_small_values(d, tol=1e-12):
+    if isinstance(d, dict):
+        for k, v in d.items():
+            d[k] = zero_small_values(v, tol)
+        return d
+    elif isinstance(d, float):
+        return 0.0 if abs(d) < tol else d
+    else:
+        return d
+
+def remove_TH_layer_4(d):
+    """Remove TH layer 4 of nested_dict of synapses."""
+    out = nested_dict()
+    for a_t, d1 in d.items():  # area
+        for pop_t, d2 in d1.items():
+            if a_t == 'TH' and pop_t[:-1] == '4':
+                print("Removing a layer")
+                continue
+            else:
+                print(pop_t[:-1])
+            for a_s, d3 in d2.items():
+                for pop_s, d4 in d3.items():
+                    if a_s == 'TH' and pop_s[:-1] == '4':
+                        continue
+                    out[a_t][pop_t][a_s][pop_s] = d4
+    return out
