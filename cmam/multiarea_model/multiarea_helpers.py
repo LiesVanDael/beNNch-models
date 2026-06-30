@@ -75,6 +75,8 @@ def calculate_K_synapses_nested_dict(  # for N with 3 levels (no clusters)
                     layer2 = s2[:-1]
                     pop2 = s2[-1]
                     # fill matrix
+                    if np.isclose(0., K_stable[i][j]):
+                        K_stable[i][j] = 0.
                     x[a1][layer1][pop1][a2][layer2][pop2] = K_stable[i][j]
                     j += 1
             # external inputs
@@ -759,14 +761,3 @@ def convert_syn_weight(W, neuron_params):
     PSP_transform = tau_syn_ex / C_m
 
     return PSP_transform * W
-
-def zero_small_values(d, tol=1e-12):
-    if isinstance(d, dict):
-        for k, v in d.items():
-            d[k] = zero_small_values(v, tol)
-        return d
-    elif isinstance(d, float):
-        return 0.0 if abs(d) < tol else d
-    else:
-        return d
-
