@@ -49,7 +49,6 @@ from .multiarea_helpers import (
     filter_nested_dict_3,
     filter_nested_dict_6,
     calculate_K_synapses_nested_dict,
-    zero_small_values
 )
 from .simulation import Simulation
 from .theory import Theory
@@ -167,7 +166,7 @@ class MultiAreaModel:
             self.W = filter_nested_dict_6(self.W, remove_TH_layer_4=True)
             self.W_sd = filter_nested_dict_6(self.W_sd, remove_TH_layer_4=True)
             
-            ind, _, _, _ = load_degree_data_nested_dict(self.N, self.synapses) # LVD
+            ind, _, _, _ = load_degree_data_nested_dict(self.N, self.synapses)
 
             te = time.time()
             passed_time = round(te - ts, 3)
@@ -311,8 +310,10 @@ class MultiAreaModel:
                         self.N,
                         ind,
                         )
-
-                self.synapses = zero_small_values(self.synapses, tol=1e-12)
+                with open('synapses_cMAM.txt', 'w') as f:
+                    f.write(str(self.synapses))
+                import sys
+                sys.exit()
 
             te = time.time()
             passed_time = round(te - ts, 3)
@@ -487,7 +488,7 @@ class MultiAreaModel:
             te = time.time()
             passed_time = round(te - ts, 3)
             print(f'downscaling took {passed_time} s')
-            # LVD 
+            
             # Initialize result
             self.K_areas = nested_dict() 
 

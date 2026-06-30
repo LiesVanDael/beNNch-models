@@ -566,16 +566,6 @@ def convert_syn_weight(W, neuron_params):
 
     return PSP_transform * W
 
-def zero_small_values(d, tol=1e-12):
-    if isinstance(d, dict):
-        for k, v in d.items():
-            d[k] = zero_small_values(v, tol)
-        return d
-    elif isinstance(d, float):
-        return 0.0 if abs(d) < tol else d
-    else:
-        return d
-
 def remove_TH_layer_4(d):
     """Remove TH layer 4 of nested_dict of synapses."""
     out = nested_dict()
