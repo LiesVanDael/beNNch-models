@@ -157,11 +157,6 @@ class MultiAreaModel_3:
                     K_stable, self.area_list, self.structure, external=ext)
             self.synapses = remove_TH_layer_4(synapses_int(indegree_to_synapse_numbers(self.K, self.N)))
 
-            with open('synapses_MAM.txt', 'w') as f:
-                f.write(str(self.synapses))
-            import sys
-            sys.exit()
-
         self.vectorize()
         if self.params['K_scaling'] != 1. or self.params['N_scaling'] != 1.:
             if self.params['fullscale_rates'] is None:
