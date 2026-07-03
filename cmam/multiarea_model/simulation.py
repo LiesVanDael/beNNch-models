@@ -592,9 +592,7 @@ class Area:
         self.create_populations()
         self.connect_devices()
         self.connect_populations()
-        print("Rank {}: created area {} with {} local nodes".format(nest.Rank(),
-                                                                    self.name,
-                                                                    self.num_local_nodes))
+        print("Rank {}: created area {}".format(nest.Rank(), self.name))
 
     def __str__(self):
         s = "Area {} with {} neurons.".format(
