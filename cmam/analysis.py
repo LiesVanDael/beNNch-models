@@ -32,7 +32,10 @@ with open(fn, 'r') as f:
 M = MultiAreaModel(network_label,
                    simulation=True,
                    analysis=True,
-                   sim_spec=custom_params['sim_params'])
+                   sim_spec=custom_params['sim_params'],
+                   data_path=data_path,
+                   data_folder_hash=label
+                   )
 
 # M.analysis.fullAnalysis()
 
