@@ -612,11 +612,8 @@ class Area:
         Create all populations of the area.
         """
         self.gids = {}
-        self.num_local_nodes = 0
         for pop in self.populations:
-            gid = nest.Create(self.network.params['neuron_params']['neuron_model'],
-                              math.ceil(self.neuron_numbers[pop[0]][pop[1]][pop[2]]))
-            I_e = self.network.add_DC_drive[self.name][pop[0]][pop[1]]#[pop[2]]
+            I_e = self.network.add_DC_drive[self.name][pop[0]][pop[1]]
             if not self.network.params['input_params']['poisson_input']:
                 K_ext = self.K_per_target_area[pop[0]][pop[1]][pop[2]]['external']['external']['external']['external']
                 W_ext = self.network.W[self.name][pop[0]][pop[1]]['external']['external']['external']
@@ -624,15 +621,15 @@ class Area:
                 DC = K_ext * W_ext * tau_syn * 1.e-3 * \
                     self.network.params['rate_ext']
                 I_e += DC
-            nest.SetStatus(gid, {'I_e': I_e})
 
             # Store GIDCollection of each population
-            self.gids[pop] = gid
-            # Initialize membrane potentials
-            # This could also be done after creating all areas, which
-            # might yield better performance. Has to be tested.
-            gid.V_m = nest.random.normal(self.network.params['neuron_params']['V0_mean'],
-                                         self.network.params['neuron_params']['V0_sd'])
+            self.gids[pop] = nest.Create(self.network.params['neuron_params']['neuron_model'],
+                              math.ceil(self.neuron_numbers[pop[0]][pop[1]][pop[2]]),
+                                         params={'I_e': I_e, 
+                                                 'V_m': 
+                                                 nest.random.normal(self.network.params['neuron_params']['V0_mean'],
+                                         self.network.params['neuron_params']['V0_sd'])}
+                                                 )
    
     def connect_populations(self):
         """
