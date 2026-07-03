@@ -68,7 +68,7 @@ if NEST_version == '2':
                        data_path=data_path,
                        data_folder_hash=data_folder_hash)
 elif NEST_version == '3':
-    print("NEST version 3.0\n")
+    print("NEST version 3\n")
     sim_params['rng_seed'] = rng_seed
     M = MultiAreaModel_3(network_params, simulation=True,
                          sim_spec=sim_params,
