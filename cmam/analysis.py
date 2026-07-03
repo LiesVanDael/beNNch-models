@@ -25,8 +25,7 @@ label = sys.argv[1]
 network_label = sys.argv[2]
 fn = os.path.join(data_path,
                   label,
-                  '_'.join(('custom_params',
-                            label)))
+                  'custom_params')
 with open(fn, 'r') as f:
     custom_params = json.load(f)
 
