@@ -708,7 +708,7 @@ def connect(simulation,
                             mean=mean_delay,
                             std=mean_delay * network.params['delay_params']['delay_rel']
                             ),
-                        min=simulation.params['dt'] - 0.5 * nest.resolution,
+                        min=simulation.params['dt'], # - 0.5 * nest.resolution,
                         max=np.Inf)}
                 
                 connect.call_counter += 1
