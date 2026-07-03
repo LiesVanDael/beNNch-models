@@ -327,6 +327,9 @@ class Simulation:
         self.time_network_local = t2 - t1
         print("Created areas and internal connections in {0:.2f} seconds.".format(
             self.time_network_local))
+        
+        print(f"nest.resolution = {nest.resolution}")
+        print(f"self.params['dt'] = {self.params['dt']}")
 
         self.cortico_cortical_input()
         t3 = time.time()
@@ -1064,7 +1067,7 @@ def connect(simulation,
                             mean=mean_delay,
                             std=mean_delay * network.params['delay_params']['delay_rel']
                             ),
-                        min=simulation.params['dt'],
+                        min=0.5*simulation.params['dt'],
                         max=np.inf)}
                
                 connect.call_counter += 1
