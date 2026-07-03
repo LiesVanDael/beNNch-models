@@ -358,10 +358,17 @@ class Simulation:
 
         print(f'Calls to connect: {connect.call_counter}')
         print(f'Number of synapses: {connect.synapse_counter}')
+        
+        self.save_network_gids()
+
+        print("Network size:", nest.GetKernelStatus('network_size'))
+        print("Saved network in {0:2f} seconds.".format(time.time() - t3))
+        
         t7 = time.time()
         nest.Prepare()
         self.time_network_prepare = time.time() - t7
         print("Preparation took {0:.2f} seconds.".format(self.time_network_prepare))
+        
         t8 = time.time()
         nest.Run(self.pre_T)
         self.time_presimulate = time.time() - t8
@@ -371,6 +378,7 @@ class Simulation:
         t8 = time.time()
         nest.Run(self.T)
         self.time_simulate = time.time() - t8
+        
         self.total_memory = self.memory()
         print("Simulated network in {0:.2f} seconds.".format(self.time_simulate))
         self.logging()
