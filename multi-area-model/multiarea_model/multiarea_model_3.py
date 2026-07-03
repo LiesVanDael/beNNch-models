@@ -155,7 +155,7 @@ class MultiAreaModel_3:
                           self.structure['V1']} for area in self.area_list}
             self.K = matrix_to_dict(
                     K_stable, self.area_list, self.structure, external=ext)
-            self.synapses = remove_TH_layer_4(synapses_int(indegree_to_synapse_numbers(self.K, self.N)), tol=1e-12)
+            self.synapses = remove_TH_layer_4(synapses_int(indegree_to_synapse_numbers(self.K, self.N)))
 
         self.vectorize()
         if self.params['K_scaling'] != 1. or self.params['N_scaling'] != 1.:

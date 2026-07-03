@@ -327,6 +327,9 @@ class Simulation:
         self.time_network_local = t2 - t1
         print("Created areas and internal connections in {0:.2f} seconds.".format(
             self.time_network_local))
+        
+        print(f"nest.resolution = {nest.resolution}")
+        print(f"self.params['dt'] = {self.params['dt']}")
 
         self.cortico_cortical_input()
         t3 = time.time()
@@ -358,10 +361,17 @@ class Simulation:
 
         print(f'Calls to connect: {connect.call_counter}')
         print(f'Number of synapses: {connect.synapse_counter}')
+        
+        self.save_network_gids()
+
+        print("Network size:", nest.GetKernelStatus('network_size'))
+        print("Saved network in {0:2f} seconds.".format(time.time() - t3))
+        
         t7 = time.time()
         nest.Prepare()
         self.time_network_prepare = time.time() - t7
         print("Preparation took {0:.2f} seconds.".format(self.time_network_prepare))
+        
         t8 = time.time()
         nest.Run(self.pre_T)
         self.time_presimulate = time.time() - t8
@@ -371,6 +381,7 @@ class Simulation:
         t8 = time.time()
         nest.Run(self.T)
         self.time_simulate = time.time() - t8
+        
         self.total_memory = self.memory()
         print("Simulated network in {0:.2f} seconds.".format(self.time_simulate))
         self.logging()
@@ -608,7 +619,6 @@ class Area:
         Create all populations of the area.
         """
         self.gids = {}
-        self.num_local_nodes = 0
         for pop in self.populations:
             layer, population = pop
             total_neurons = self.neuron_numbers[layer][population]
@@ -624,15 +634,18 @@ class Area:
                 DC = K_ext * W_ext * tau_syn * 1.e-3 * \
                     self.network.params['rate_ext']
                 I_e += DC
-            nest.SetStatus(gid, {'I_e': I_e})
 
             # Store GIDCollection of each population
-            self.gids[(layer, population)] = gid
             # Initialize membrane potentials
             # This could also be done after creating all areas, which
             # might yield better performance. Has to be tested.
-            gid.V_m = nest.random.normal(self.network.params['neuron_params']['V0_mean'],
-                                         self.network.params['neuron_params']['V0_sd'])
+            self.gids[(layer, population)] = nest.Create(self.network.params['neuron_params']['neuron_model'],
+                              math.ceil(total_neurons),
+                                         params={'I_e': I_e, 
+                                                 'V_m': 
+                                                 nest.random.normal(self.network.params['neuron_params']['V0_mean'],
+                                         self.network.params['neuron_params']['V0_sd'])}
+                                                 )
    
     def connect_populations(self):
         """
@@ -713,8 +726,8 @@ class Area:
 
             if self.stim_area_params['stim_rate'] > 0.:
                 print('area', self.name)
-                print('layer', pop[0])
-                print('population', pop[1])
+                print('layer', layer)
+                print('population', population)
                 print('rate', self.stim_area_params['stim_rate'])
             
             syn_spec = {
@@ -1020,7 +1033,7 @@ def connect(simulation,
                             mean=mean_delay,
                             std=mean_delay * network.params['delay_params']['delay_rel']
                             ),
-                        min=simulation.params['dt'],
+                        min=0.5*simulation.params['dt'],
                         max=np.inf)}
                
                 connect.call_counter += 1
