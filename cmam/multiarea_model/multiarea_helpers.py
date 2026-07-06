@@ -153,7 +153,7 @@ def calculate_K_synapses_nested_dict_N4( # for N with 4 levels (including cluste
     return x, synapses
 
 
-def load_degree_data_nested_dict(N, synapses):  # N 3, synapses 6 # LVD 
+def load_degree_data_nested_dict(N, synapses):  # N 3, synapses 6
     indegrees = nested_dict()
     outdegrees = nested_dict()
     indegrees_areas = nested_dict()
@@ -188,7 +188,6 @@ def load_degree_data_nested_dict(N, synapses):  # N 3, synapses 6 # LVD
         outdegrees_areas.to_dict()
     )
 
-# LVD 
 def filter_nested_dict_3(d, remove_TH_layer_4=False, remove_total=False):
     """Filter nested dicts by removing TH layer 4 or 'total' entries."""
     out = {}

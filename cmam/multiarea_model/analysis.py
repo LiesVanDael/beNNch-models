@@ -74,7 +74,6 @@ class Analysis():
         self.ana_hash = self.getHash()
 
         self.sim_folder = self.simulation.data_dir
-        # LVD
         self.ana_folder = self.simulation.data_dir
         #self.ana_folder = os.path.join(
         #        self.simulation.data_dir,

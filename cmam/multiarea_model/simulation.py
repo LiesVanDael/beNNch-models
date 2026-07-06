@@ -197,13 +197,13 @@ class Simulation:
             status_dict.update({'label': label})
             nest.SetStatus(self.voltmeter, status_dict)
 
-    def create_areas(self): # LVD
+    def create_areas(self):
         """
         Create all areas with their populations and internal connections.
         """
         self.areas = []
         for area_name in self.areas_simulated:
-            a = Area(self, self.network, area_name) # LVD
+            a = Area(self, self.network, area_name)
             self.areas.append(a)
             print("Memory after {0} : {1:.2f} MB".format(area_name, self.memory() / 1024.))
 
@@ -550,7 +550,7 @@ class Simulation:
                                 'runtime cannot be registered.')
 
 class Area:
-    def __init__(self, simulation, network, name): # LVD
+    def __init__(self, simulation, network, name):
         """
         Area class.
         This class encapsulates a single area of the model.
@@ -684,12 +684,12 @@ class Area:
                                  tuple(range(self.gids[pop][0], self.gids[pop][0] + nrec + 1)))
         if self.network.params['input_params']['poisson_input']:
             self.poisson_generators = []
-            for pop in self.populations: # LVD
+            for pop in self.populations:
                 K_ext = self.K_per_target_area[pop[0]][pop[1]][pop[2]]['external']['external']['external']['external']
                 W_ext = self.network.W[self.name][pop[0]][pop[1]][pop[2]]['external']['external']['external']['external']
                 pg = nest.Create('poisson_generator')
                 nest.SetStatus(
-                    pg, {'rate': self.network.rates[self.name][pop[0]][pop[1]] * K_ext}) # LVD 
+                    pg, {'rate': self.network.rates[self.name][pop[0]][pop[1]] * K_ext})
                 syn_spec = {'weight': W_ext}
                 if self.network.params['USING_NEST_3']:
                     nest.Connect(pg,
@@ -707,9 +707,9 @@ class Area:
         if nest.Rank() == 0:
             print('Microstimulation connection established')
         for pop in self.populations:
-            K_stim = self.K_per_target_area[pop[0]][pop[1]][pop[2]]['stim']['stim']['stim']['stim'] # LVD
-            W_stim = self.network.W[self.name][pop[0]][pop[1]][pop[2]]['stim']['stim']['stim']['stim'] # LVD
-            W_stim_sd = self.network.W_sd[self.name][pop[0]][pop[1]]['stim']['stim']['stim'] # LVD
+            K_stim = self.K_per_target_area[pop[0]][pop[1]][pop[2]]['stim']['stim']['stim']['stim']
+            W_stim = self.network.W[self.name][pop[0]][pop[1]][pop[2]]['stim']['stim']['stim']['stim']
+            W_stim_sd = self.network.W_sd[self.name][pop[0]][pop[1]]['stim']['stim']['stim']
             self.stop_stim = (self.stim_area_params['stim_start'] +
                               self.stim_area_params['stim_duration'])
 
@@ -762,10 +762,9 @@ class Area:
         for pop in self.populations:
             # pop contains layer, population, cluster
             layer, population, cluster = pop
-            #layer, population = pop # LVD
             K = self.K_per_target_area[pop[0]][pop[1]][pop[2]]['cluster_stim']['cluster_stim']['cluster_stim']['cluster_stim']
-            W = self.network.W[self.name][pop[0]][pop[1]][pop[2]]['cluster_stim']['cluster_stim']['cluster_stim']['cluster_stim'] # LVD
-            W_sd = self.network.W_sd[self.name][pop[0]][pop[1]]['cluster_stim']['cluster_stim']['cluster_stim'] # LVD
+            W = self.network.W[self.name][pop[0]][pop[1]][pop[2]]['cluster_stim']['cluster_stim']['cluster_stim']['cluster_stim']
+            W_sd = self.network.W_sd[self.name][pop[0]][pop[1]]['cluster_stim']['cluster_stim']['cluster_stim']
 
             stim_start = self.cluster_stimulation_params[cluster]['stim_start']
             stim_rate = self.cluster_stimulation_params[cluster]['stim_rate']
@@ -850,7 +849,7 @@ class Area:
         for pop in self.populations:
             # pop contains layer, population, cluster
             layer, population, cluster = pop
-            K = self.K_per_target_area[pop[0]][pop[1]][pop[2]]['pulvinar']['pulvinar']['pulvinar']['pulvinar'] # LVD
+            K = self.K_per_target_area[pop[0]][pop[1]][pop[2]]['pulvinar']['pulvinar']['pulvinar']['pulvinar']
             W = self.network.W[self.name][pop[0]][pop[1]][pop[2]]['pulvinar']['pulvinar']['pulvinar']['pulvinar']
             W_sd = self.network.W_sd[self.name][pop[0]][pop[1]]['pulvinar']['pulvinar']['pulvinar']
 
@@ -964,7 +963,7 @@ class Area:
             for source_pop in self.network.structure[source_area_name]:
                 syn_spec = {'weight': W[''.join(pop[:-1])][source_pop],
                             'delay': delay}
-                K = synapses[''.join(pop[:-1])][source_pop] / sum(self.neuron_numbers[pop[0]][pop[1]].values()) # LVD
+                K = synapses[''.join(pop[:-1])][source_pop] / sum(self.neuron_numbers[pop[0]][pop[1]].values())
                 if input_type == 'het_current_nonstat':
                     curr_gen = nest.Create('step_current_generator')
                     dt = self.simulation.params['dt']
@@ -1071,8 +1070,8 @@ def connect(simulation,
                 connect.call_counter += 1
                 connect.synapse_counter += number_of_synapses
                 if network.params['USING_NEST_3']:
-                    nest.Connect(source_area.gids[(layer_s, pop_s, c_s)], # source # test # LVD 
-                                 target_area.gids[(layer_t, pop_t, c_t)], # target # test # LVD
+                    nest.Connect(source_area.gids[(layer_s, pop_s, c_s)],
+                                 target_area.gids[(layer_t, pop_t, c_t)],
                                  conn_spec,
                                  syn_spec)
                 else:

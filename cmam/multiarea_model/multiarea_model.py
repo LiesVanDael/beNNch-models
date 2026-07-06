@@ -154,7 +154,7 @@ class MultiAreaModel:
             self.W_sd = dat['synapse_weights_sd'] # 6 layers deep
             self.area_list = complete_area_list
             self.distances = dat['distances']
-            self.cluster_params = dat['cluster_params'] # LVD 
+            self.cluster_params = dat['cluster_params']
 
             # ===========================================================
             # Filter out thalamic populations and corresponding connections
@@ -226,7 +226,7 @@ class MultiAreaModel:
                                             if layer_s == 'external':
                                                 for pop_s in self.W[a_t][layer_t][pop_t][a_s][layer_s]:
                                                     if pop_s == 'external':
-                                                        self.W[a_t][layer_t][pop_t][a_s][layer_s][pop_s] *= scaling6E # LVD 
+                                                        self.W[a_t][layer_t][pop_t][a_s][layer_s][pop_s] *= scaling6E
 
             te = time.time()
             passed_time = round(te - ts, 3)
@@ -368,7 +368,6 @@ class MultiAreaModel:
             tau_syn_ex = self.params['neuron_params']['single_neuron_dict']['tau_syn_ex']
             C_m = self.params['neuron_params']['single_neuron_dict']['C_m']
 
-            # LVD 
             self.J = nested_dict()
             for t_area, d1 in self.W.items():
                 for t_layer, d2 in d1.items():
@@ -464,7 +463,6 @@ class MultiAreaModel:
                             #)
 
                 # Scale J
-                # self.J /= np.sqrt(K_scaling) # LVD
                 for a_t, d1 in self.J.items():
                     for layer_t, d2 in d1.items():
                         for pop_t, d3 in d2.items():
@@ -698,7 +696,7 @@ class MultiAreaModel:
         self.theory = Theory(self, theory_spec)
 
     def init_simulation(self, sim_spec, network_spec):
-        self.simulation = Simulation(self, sim_spec, network_spec, self.data_folder_hash) # LVD 
+        self.simulation = Simulation(self, sim_spec, network_spec, self.data_folder_hash)
 
     def init_analysis(self, ana_spec):
         assert(hasattr(self, 'simulation'))
@@ -811,7 +809,7 @@ class MultiAreaModel:
         for name in names:
             with open(os.path.join(sim_path, f"{name}.pkl"), "rb") as f:
                 obj = pickle.load(f)
-            # If it's a plain dict, wrap it back into nested_dict # LVD
+            # If it's a plain dict, wrap it back into nested_dict
             if isinstance(obj, dict) and not isinstance(obj, nested_dict):
                 obj = nested_dict(obj)
             setattr(self, name, obj)
@@ -842,8 +840,8 @@ class MultiAreaModel:
             self.params['connection_params']['cluster_specific_cc_connections']
 
        # if cluster_specific_cc_connections:
-       #     self.K = self.make_cc_connections_directed_nested_dict(self.K) # LVD TODO: what is K, how to change function 
-       #     self.synapses = self.make_cc_connections_directed_nested_dict(self.synapses) # LVD moved here
+       #     self.K = self.make_cc_connections_directed_nested_dict(self.K) TODO: what is K, how to change function 
+       #     self.synapses = self.make_cc_connections_directed_nested_dict(self.synapses) moved here
 
         te = time.time()
         passed_time = round(te - ts, 3)

@@ -1060,7 +1060,7 @@ def compute_Model_params(CLUSTER, out_label='', mode='default'):
                 'pulvinar': PSC_stim_rel_sd_normal * PSC_e_over_PSP_e * PSP_cluster
                 }
 
-    def clusterize_2(d, cluster_params, remove_TH_layer_4=False): # LVD 
+    def clusterize_2(d, cluster_params, remove_TH_layer_4=False):
         new_dict = nested_dict()
         for a_t, d1 in d.items():
             cluster = cluster_params[a_t]['CLUSTER']
@@ -1091,7 +1091,6 @@ def compute_Model_params(CLUSTER, out_label='', mode='default'):
                                 new_dict[a_t][pop_t[:-1]][pop_t[-1]][c0][a_s][pop_s][pop_s][pop_s] = val
         return new_dict
 
-    # LVD 
     # added remove TH4 here
     def split_layer_type(d, remove_TH_layer_4=False):
         new_dict = nested_dict()
@@ -1122,9 +1121,8 @@ def compute_Model_params(CLUSTER, out_label='', mode='default'):
     # TODO dirty hack
     CLUSTER['pulvinar'] = deepcopy(CLUSTER['cluster_stim'])
 
-    # LVD 
     nn_2 = split_layer_type_2(neuronal_numbers, remove_TH_layer_4=True)
-    syn_nums = split_layer_type(synapse_numbers, remove_TH_layer_4 = True) # LVD 
+    syn_nums = split_layer_type(synapse_numbers, remove_TH_layer_4 = True)
     syn_weights_mean = split_layer_type(synapse_weights_mean, remove_TH_layer_4 = True)
     syn_weights_sd = split_layer_type(synapse_weights_sd, remove_TH_layer_4 = True)
     """
@@ -1138,15 +1136,12 @@ def compute_Model_params(CLUSTER, out_label='', mode='default'):
                       'av_indegree_V1': av_indegree_V1,
                       'population_list': population_list,
                       'structure': structure,
-                      'synapses': syn_nums, # LVD 
-                      #'synapses': synapse_numbers, # LVD 
+                      'synapses': syn_nums,
                       'neuron_numbers': nn_2,
                       'distances': Distance_Data,
-                      'synapse_weights_mean': syn_weights_mean, # LVD 
-                      #'synapse_weights_mean': synapse_weights_mean, # LVD 
-                      'synapse_weights_sd': syn_weights_sd, # LVD 
-                      #'synapse_weights_sd': synapse_weights_sd, # LVD 
-                      'cluster_params': CLUSTER, # LVD 
+                      'synapse_weights_mean': syn_weights_mean,
+                      'synapse_weights_sd': syn_weights_sd,
+                      'cluster_params': CLUSTER,
                       }
 
     with open(os.path.join(basepath,
@@ -1156,7 +1151,6 @@ def compute_Model_params(CLUSTER, out_label='', mode='default'):
                                      'json'))), 'w') as f:
         json.dump(collected_data, f)
 
-    # TODO: do we need all of the below?
     with open(os.path.join(basepath,
                            '.'.join(('_'.join((prefix,
                                                'structure',
