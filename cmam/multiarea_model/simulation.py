@@ -394,25 +394,24 @@ class Simulation:
     
     def logging(self):
         """
-        Write runtime and memory for all MPI processes
-        to file.
+        Write runtime and memory for all MPI processes to file.
         """
+
         d = {'py_time_kernel_prepare': self.time_kernel_prepare,
              'py_time_network_local': self.time_network_local,
              'py_time_network_global': self.time_network_global,
+             'py_time_presimulate': self.time_presimulate,
+             'py_time_network_prepare': self.time_network_prepare,
+             'py_time_simulate': self.time_simulate,
              'py_time_create_stimulation': self.time_create_stimulation,
              'py_time_create_cluster_stimulation': self.time_create_cluster_stimulation,
              'py_time_create_pulvinar_stimulation': self.time_create_pulvinar_stimulation,
-             'py_time_network_prepare': self.time_network_prepare,
-             'py_time_presimulate': self.time_presimulate,
-             'py_time_simulate': self.time_simulate,
              'base_memory': self.base_memory,
              'network_memory': self.network_memory,
              'total_memory': self.total_memory}
 
         final_kernel_status = nest.kernel_status
         d.update(final_kernel_status)
-        print(f"final_kernel_status: {d}")
 
         # Subtract timer information from presimulation period
         presim_timers = ['time_collocate_spike_data', 'time_communicate_spike_data', 'time_deliver_secondary_data', 'time_deliver_spike_data', 'time_gather_secondary_data', 'time_gather_spike_data', 'time_omp_synchronization_simulation', 'time_mpi_synchronization', 'time_simulate', 'time_update']
@@ -422,34 +421,38 @@ class Simulation:
 
         for timer in presim_timers:
             try:
-                a = d[timer]
-                pre = self.intermediate_kernel_status[timer]
-                r = np.asarray(a) - np.asarray(pre)
-                if isinstance(a, tuple):
-                    d[timer] = tuple(r.tolist())
-                else:
-                    d[timer] = r.item() if r.ndim == 0 else tuple(r.tolist())
-              #  d[timer + "_max"] = max(timer_array)
-              #  d[timer + "_min"] = min(timer_array)
-              #  d[timer + "_mean"] = np.mean(timer_array)
-              #  d[timer + "_all"] = timer_array
-              #  d[timer + '_presim'] = self.intermediate_kernel_status[timer]
-              #  d[timer + "_presim_max"] = max(self.intermediate_kernel_status[timer])
-              #  d[timer + "_presim_min"] = min(self.intermediate_kernel_status[timer])
-              #  d[timer + "_presim_avg"] = np.mean(self.intermediate_kernel_status[timer])
-              #  d[timer + "_presim_all"] = self.intermediate_kernel_status[timer]
+                try:   
+                    timer_array = tuple(d[timer][tid] - self.intermediate_kernel_status[timer][tid] for tid in range(len(d[timer])))
+                    d[timer] = timer_array[0]
+                    d[timer + "_max"] = max(timer_array)
+                    d[timer + "_min"] = min(timer_array)
+                    d[timer + "_mean"] = np.mean(timer_array)
+                    d[timer + "_all"] = timer_array
+                    d[timer + '_presim'] = self.intermediate_kernel_status[timer][0]
+                    d[timer + "_presim_max"] = max(self.intermediate_kernel_status[timer])
+                    d[timer + "_presim_min"] = min(self.intermediate_kernel_status[timer])
+                    d[timer + "_presim_avg"] = np.mean(self.intermediate_kernel_status[timer])
+                    d[timer + "_presim_all"] = self.intermediate_kernel_status[timer]
+                except TypeError:
+                    # No threaded timers, fall back to scalar handling
+                    d[timer] -= self.intermediate_kernel_status[timer]
+                    d[timer + '_presim'] = self.intermediate_kernel_status[timer]
             except KeyError:
                 # KeyError if compiled without detailed timers, except time_simulate
                 continue
 
         for timer in other_timers:
             try:
-                a = d[timer]
-                arr = np.asarray(a)
-                if isinstance(a, tuple):
-                    d[timer] = tuple(arr.tolist())
-                else:
-                    d[timer] = arr.item() if arr.ndim == 0 else tuple(arr.tolist())
+                try:
+                    timer_array = d[timer]
+                    d[timer] = timer_array[0]
+                    d[timer + "_max"] = max(timer_array)
+                    d[timer + "_min"] = min(timer_array)
+                    d[timer + "_mean"] = np.mean(timer_array)
+                    d[timer + "_all"] = timer_array
+                except TypeError:
+                    # No threaded timers, d[timer] is already a scalar and is set after nest.kernel_status
+                    continue
             except KeyError:
                 # KeyError if compiled without detailed timers, except time_simulate
                 continue
