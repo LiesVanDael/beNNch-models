@@ -470,15 +470,19 @@ class Simulation:
             for key, value in d.items():
                 f.write(key + ' ' + str(value) + '\n')
 
-        fn_cycle_time = os.path.join(self.data_dir,
-                                     'recordings',
-                                     '_'.join((self.label,
-                                               'cycle_time_log',
-                                               str(nest.Rank()))))
+        try:
+            fn_cycle_time = os.path.join(self.data_dir,
+                                         'recordings',
+                                         '_'.join((self.label,
+                                                   'cycle_time_log',
+                                                   str(nest.Rank()))))
 
-        np.savetxt(fn_cycle_time, np.transpose([d['cycle_time_log']['time_update'], d['cycle_time_log']['time_communicate_spike_data'], 
-                                                d['cycle_time_log']['local_spike_counter']]))
-
+            np.savetxt(fn_cycle_time, np.transpose([d['cycle_time_log']['time_update'], d['cycle_time_log']['time_communicate_spike_data'], 
+                                                    d['cycle_time_log']['local_spike_counter']]))
+        except KeyError:
+            # KeyError if compiled without cycle timers
+            continue
+    
     def save_network_gids(self): 
         with open(os.path.join(self.data_dir,
                                'recordings',
