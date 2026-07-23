@@ -154,15 +154,6 @@ class Simulation:
             shutil.copy2(os.path.join(base_path, f),
                          self.data_dir)
 
-        fn_cycle_time = os.path.join(self.data_dir,
-                                     'recordings',
-                                     '_'.join((self.label,
-                                               'cycle_time_log',
-                                               str(nest.Rank()))))
-
-        np.savetxt(fn_cycle_time, np.transpose([d['cycle_time_log']['time_update'], d['cycle_time_log']['time_communicate_spike_data'], 
-                                                d['cycle_time_log']['local_spike_counter']]))
-
     def prepare(self):
         """
         Prepare NEST Kernel.
@@ -478,6 +469,15 @@ class Simulation:
         with open(fn, 'a') as f:
             for key, value in d.items():
                 f.write(key + ' ' + str(value) + '\n')
+
+        fn_cycle_time = os.path.join(self.data_dir,
+                                     'recordings',
+                                     '_'.join((self.label,
+                                               'cycle_time_log',
+                                               str(nest.Rank()))))
+
+        np.savetxt(fn_cycle_time, np.transpose([d['cycle_time_log']['time_update'], d['cycle_time_log']['time_communicate_spike_data'], 
+                                                d['cycle_time_log']['local_spike_counter']]))
 
     def save_network_gids(self): 
         with open(os.path.join(self.data_dir,
