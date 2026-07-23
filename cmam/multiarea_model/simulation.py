@@ -481,7 +481,7 @@ class Simulation:
                                                     d['cycle_time_log']['local_spike_counter']]))
         except KeyError:
             # KeyError if compiled without cycle timers
-            continue
+            pass
     
     def save_network_gids(self): 
         with open(os.path.join(self.data_dir,
