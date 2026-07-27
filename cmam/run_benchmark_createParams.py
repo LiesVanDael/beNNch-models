@@ -28,9 +28,9 @@ if not record_spikes:
 os.makedirs(os.path.join(data_path, label), exist_ok=True)
 
 network_params = params(Q)
-network_params['input_params']['poisson_input'] = poisson_input
 
 for net_params in network_params:
+    network_params['input_params']['poisson_input'] = poisson_input
     M = MultiAreaModel(net_params,
                        simulation=True,
                        sim_spec=sim_params,
