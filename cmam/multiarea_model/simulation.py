@@ -720,60 +720,62 @@ class Area:
 
     def connect_microstimulation(self):
         """ Connects the microstimulation population to the corresponding areas."""
-        if nest.Rank() == 0:
-            print('Microstimulation connection established')
         for pop in self.populations:
             K_stim = self.K_per_target_area[pop[0]][pop[1]][pop[2]]['stim']['stim']['stim']['stim']
             W_stim = self.network.W[self.name][pop[0]][pop[1]][pop[2]]['stim']['stim']['stim']['stim']
             W_stim_sd = self.network.W_sd[self.name][pop[0]][pop[1]]['stim']['stim']['stim']
-            self.stop_stim = (self.stim_area_params['stim_start'] +
-                              self.stim_area_params['stim_duration'])
+            stim_start = self.stim_area_params['stim_start']
+            stim_rate = self.stim_area_params['stim_rate']
+            stim_duration = self.stim_area_params['stim_duration']
 
-            poisson_stim = nest.Create('poisson_generator')
-            self.microstimulation_gid = poisson_stim[0]
-            nest.SetStatus(
-                poisson_stim, {
-                    'rate': self.stim_area_params['stim_rate'] * K_stim,
-                    'start': self.stim_area_params['stim_start'],
-                    'stop': self.stop_stim
-                    }
-                )
+            if stim_rate > 0.:
 
-            if self.stim_area_params['stim_rate'] > 0.:
+                stop_stim = stim_start + stim_duration
+
+                poisson_stim = nest.Create('poisson_generator')
+                self.microstimulation_gid = poisson_stim[0]
+                nest.SetStatus(
+                    poisson_stim, {
+                        'rate': stim_rate * K_stim,
+                        'start': stim_start,
+                        'stop': stop_stim
+                        }
+                    )
+
                 print('area', self.name)
                 print('layer', pop[0])
                 print('population', pop[1])
                 print('cluster', pop[2])
-                print('rate', self.stim_area_params['stim_rate'])
+                print('rate', stim_rate)
             
-            syn_spec = {
-                    'synapse_model': 'static_synapse',
-                    'weight': nest.random.normal(
-                        mean=W_stim,
-                        std=W_stim_sd
-                        )
-                      }
+                syn_spec = {
+                        'synapse_model': 'static_synapse',
+                        'weight': nest.random.normal(
+                            mean=W_stim,
+                            std=W_stim_sd
+                            )
+                          }
 
-            if self.network.params['USING_NEST_3']:
-                nest.Connect(poisson_stim,
-                             self.gids[pop],
-                             syn_spec=syn_spec
-                             )
-            else:
-                nest.Connect(poisson_stim,
-                             tuple(
-                                 range(
-                                     self.gids[pop][0], 
-                                     self.gids[pop][1] + 1
-                                     )
-                                 ),
-                             syn_spec=syn_spec
-                             )
+                if self.network.params['USING_NEST_3']:
+                    nest.Connect(poisson_stim,
+                                 self.gids[pop],
+                                 syn_spec=syn_spec
+                                 )
+                else:
+                    nest.Connect(poisson_stim,
+                                 tuple(
+                                     range(
+                                         self.gids[pop][0], 
+                                         self.gids[pop][1] + 1
+                                         )
+                                     ),
+                                 syn_spec=syn_spec
+                                 )
+        if nest.Rank() == 0:
+            print('Microstimulation connection established')
 
     def connect_cluster_stimulation(self):
         """ Connects the microstimulation population to the corresponding areas."""
-        if nest.Rank() == 0:
-            print('Cluster stimulation connection established')
         self.cluster_stimulation_gid = {}
         for pop in self.populations:
             # pop contains layer, population, cluster
@@ -856,11 +858,11 @@ class Area:
                                  ),
                              syn_spec=syn_spec
                              )
+        if nest.Rank() == 0:
+            print('Cluster stimulation connection established')
 
     def connect_pulvinar_stimulation(self):
         """ Connects the pulvinar population to the corresponding areas."""
-        if nest.Rank() == 0:
-            print('Cluster stimulation connection established')
         self.pulvinar_gid = {}
         for pop in self.populations:
             # pop contains layer, population, cluster
@@ -880,6 +882,8 @@ class Area:
                 # means that until t=10 rate is zero, between t=10 and t=20 the
                 # rate is 12, between t=20 and t=30 the rate is 0, and from
                 # t=30 on the rate is 16
+                if not any(r != 0 for r in stim_rate):
+                    continue
                 rate = [r * K for r in stim_rate]
 
                 poisson_stim = nest.Create('inhomogeneous_poisson_generator')
@@ -890,14 +894,15 @@ class Area:
                         'rate_values': rate,
                         }
                     )
-                if len(stim_rate) > 0:
-                    print('area', self.name)
-                    print('layer', layer)
-                    print('population', population)
-                    print('cluster', cluster)
-                    print('rate', rate)
-                    print('stim_start', stim_start)
+                print('area', self.name)
+                print('layer', layer)
+                print('population', population)
+                print('cluster', cluster)
+                print('rate', rate)
+                print('stim_start', stim_start)
             else:
+                if stim_rate == 0.:
+                    continue
                 stim_stop = (stim_start + stim_duration)
 
                 rate = stim_rate * K
@@ -911,22 +916,20 @@ class Area:
                         'stop': stim_stop
                         }
                     )
-
-                if stim_rate > 0.:
-                    print('area', self.name)
-                    print('layer', layer)
-                    print('population', population)
-                    print('cluster', cluster)
-                    print('rate', stim_rate)
-                    print('stim_start', stim_start)
+                print('area', self.name)
+                print('layer', layer)
+                print('population', population)
+                print('cluster', cluster)
+                print('rate', stim_rate)
+                print('stim_start', stim_start)
             
             syn_spec = {
                       'synapse_model': 'static_synapse',
-                      'weight': nest.random.normal(
-                          mean=W,
-                          std=W_sd
-                          )
-                        }
+                  'weight': nest.random.normal(
+                      mean=W,
+                      std=W_sd
+                      )
+                    }
 
             if self.network.params['USING_NEST_3']:
                 nest.Connect(poisson_stim,
@@ -943,6 +946,8 @@ class Area:
                                  ),
                              syn_spec=syn_spec
                              )
+        if nest.Rank() == 0:
+            print('Pulvinar stimulation connection established')
 
     def create_additional_input(self, input_type, source_area_name, cc_input):
         """
