@@ -338,21 +338,21 @@ class Simulation:
             self.time_network_global))
 
         # Stimulates all clusters of an area
-        self.create_stimulation()
+        #self.create_stimulation()
         t4 = time.time()
         self.time_create_stimulation = t4 - t3
         print("Created stimulations in {0:.2f} seconds.".format(
             self.time_create_stimulation))
 
         # Stimulates only one cluster of an area
-        self.create_cluster_stimulation()
+        #self.create_cluster_stimulation()
         t5 = time.time()
         self.time_create_cluster_stimulation = t5 - t4
         print("Created cluster stimulations in {0:.2f} seconds.".format(
             self.time_create_cluster_stimulation))
 
         # Stimulates only one cluster of an area as pulvinar would
-        self.create_pulvinar_stimulation()
+        #self.create_pulvinar_stimulation()
         t6 = time.time()
         self.network_memory = self.memory()
         self.time_create_pulvinar_stimulation = t6 - t5
