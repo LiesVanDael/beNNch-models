@@ -699,13 +699,22 @@ class Area:
                     nest.Connect(self.simulation.voltmeter,
                                  tuple(range(self.gids[pop][0], self.gids[pop][0] + nrec + 1)))
         if self.network.params['input_params']['poisson_input']:
-            self.poisson_generators = []
+            self.poisson_generators = {} 
             for pop in self.populations:
-                K_ext = self.K_per_target_area[pop[0]][pop[1]][pop[2]]['external']['external']['external']['external']
-                W_ext = self.network.W[self.name][pop[0]][pop[1]][pop[2]]['external']['external']['external']['external']
-                pg = nest.Create('poisson_generator')
-                nest.SetStatus(
-                    pg, {'rate': self.network.rates[self.name][pop[0]][pop[1]] * K_ext})
+                layer, pop_type, cluster = pop
+                key = (layer, pop_type)
+                if key not in self.poisson_generators:
+                    # Rate, K_ext and W_ext are identical across all clusters of
+                    # a given (layer, pop_type), so a single generator per
+                    # (layer, pop_type) suffices instead of one per cluster.
+                    K_ext = self.K_per_target_area[layer][pop_type][cluster]['external']['external']['external']['external']
+                    pg = nest.Create('poisson_generator')
+                    nest.SetStatus(
+                        pg, {'rate': self.network.rates[self.name][layer][pop_type] * K_ext})
+                    self.poisson_generators[key] = pg 
+                pg = self.poisson_generators[key]
+
+                W_ext = self.network.W[self.name][layer][pop_type][cluster]['external']['external']['external']['external']
                 syn_spec = {'weight': W_ext}
                 if self.network.params['USING_NEST_3']:
                     nest.Connect(pg,
@@ -714,9 +723,8 @@ class Area:
                 else:
                     nest.Connect(pg,
                                  tuple(
-                                     range(self.gids[pop][0], self.gids[pop][1] + 1)),
+                                     range(self.gids[pop][0], self.gids[pop][1] + 1)), 
                                  syn_spec=syn_spec)
-                self.poisson_generators.append(pg[0])
 
     def connect_microstimulation(self):
         """ Connects the microstimulation population to the corresponding areas."""
