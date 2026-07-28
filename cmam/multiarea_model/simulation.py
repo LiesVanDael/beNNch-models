@@ -337,27 +337,12 @@ class Simulation:
         print("Created cortico-cortical connections in {0:.2f} seconds.".format(
             self.time_network_global))
 
-        # Stimulates all clusters of an area
-        #self.create_stimulation()
-        t4 = time.time()
-        self.time_create_stimulation = t4 - t3
-        print("Created stimulations in {0:.2f} seconds.".format(
-            self.time_create_stimulation))
-
         # Stimulates only one cluster of an area
         #self.create_cluster_stimulation()
         t5 = time.time()
         self.time_create_cluster_stimulation = t5 - t4
         print("Created cluster stimulations in {0:.2f} seconds.".format(
             self.time_create_cluster_stimulation))
-
-        # Stimulates only one cluster of an area as pulvinar would
-        #self.create_pulvinar_stimulation()
-        t6 = time.time()
-        self.network_memory = self.memory()
-        self.time_create_pulvinar_stimulation = t6 - t5
-        print("Created pulvinar stimulations in {0:.2f} seconds.".format(
-            self.time_create_pulvinar_stimulation))
 
         print(f'Calls to connect: {connect.call_counter}')
         print(f'Number of synapses: {connect.synapse_counter}')
@@ -601,7 +586,7 @@ class Area:
         for t_layer, d1 in self.synapses.items():
             for t_pop, d2 in d1.items():
                 for t_cluster in d2:
-                    self.populations.append((t_layer, t_pop, t_cluster)) 
+                    self.populations.append((t_layer, t_pop, t_cluster))
 
         self.K_per_target_area = self.network.K[self.name]   
 
@@ -783,7 +768,7 @@ class Area:
             print('Microstimulation connection established')
 
     def connect_cluster_stimulation(self):
-        """ Connects the microstimulation population to the corresponding areas."""
+        """ #TODO """
         self.cluster_stimulation_gid = {}
         for pop in self.populations:
             # pop contains layer, population, cluster
@@ -804,6 +789,8 @@ class Area:
                 # means that until t=10 rate is zero, between t=10 and t=20 the
                 # rate is 12, between t=20 and t=30 the rate is 0, and from
                 # t=30 on the rate is 16
+                if not any(r != 0 for r in stim_rate):
+                    continue
                 rate = [r * K for r in stim_rate]
 
                 poisson_stim = nest.Create('inhomogeneous_poisson_generator')
@@ -814,14 +801,17 @@ class Area:
                         'rate_values': rate,
                         }
                     )
-                if len(stim_rate) > 0:
+
                     print('area', self.name)
                     print('layer', layer)
                     print('population', population)
                     print('cluster', cluster)
                     print('rate', rate)
                     print('stim_start', stim_start)
+
             else:
+                if stim_rate == 0:
+                    continue
                 stim_stop = (stim_start + stim_duration)
 
                 rate = stim_rate * K
@@ -836,12 +826,11 @@ class Area:
                         }
                     )
 
-                if stim_rate > 0.:
-                    print('area', self.name)
-                    print('layer', layer)
-                    print('population', population)
-                    print('cluster', cluster)
-                    print('rate', stim_rate)
+                print('area', self.name)
+                print('layer', layer)
+                print('population', population)
+                print('cluster', cluster)
+                print('rate', stim_rate)
             
             syn_spec = {
                     'synapse_model': 'static_synapse',
