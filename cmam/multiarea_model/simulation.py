@@ -802,12 +802,12 @@ class Area:
                         }
                     )
 
-                    print('area', self.name)
-                    print('layer', layer)
-                    print('population', population)
-                    print('cluster', cluster)
-                    print('rate', rate)
-                    print('stim_start', stim_start)
+                print('area', self.name)
+                print('layer', layer)
+                print('population', population)
+                print('cluster', cluster)
+                print('rate', rate)
+                print('stim_start', stim_start)
 
             else:
                 if stim_rate == 0:
