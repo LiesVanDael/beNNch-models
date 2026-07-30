@@ -338,9 +338,9 @@ class Simulation:
             self.time_network_global))
 
         # Stimulates only one cluster of an area
-        #self.create_cluster_stimulation()
-        t5 = time.time()
-        self.time_create_cluster_stimulation = t5 - t4
+        self.create_cluster_stimulation()
+        t4 = time.time()
+        self.time_create_cluster_stimulation = t4 - t3
         print("Created cluster stimulations in {0:.2f} seconds.".format(
             self.time_create_cluster_stimulation))
 
@@ -350,22 +350,22 @@ class Simulation:
         self.save_network_gids()
 
         print("Network size:", nest.GetKernelStatus('network_size'))
-        print("Saved network in {0:2f} seconds.".format(time.time() - t3))
+        print("Saved network in {0:2f} seconds.".format(time.time() - t4))
         
-        t7 = time.time()
+        t5 = time.time()
         nest.Prepare()
-        self.time_network_prepare = time.time() - t7
+        self.time_network_prepare = time.time() - t5
         print("Preparation took {0:.2f} seconds.".format(self.time_network_prepare))
         
-        t8 = time.time()
+        t6 = time.time()
         nest.Run(self.pre_T)
-        self.time_presimulate = time.time() - t8
+        self.time_presimulate = time.time() - t6
         print("Presimulated network in {0:.2f} seconds.".format(self.time_presimulate))
         self.intermediate_kernel_status = nest.kernel_status
 
-        t8 = time.time()
+        t7 = time.time()
         nest.Run(self.T)
-        self.time_simulate = time.time() - t8
+        self.time_simulate = time.time() - t7
         
         self.total_memory = self.memory()
         print("Simulated network in {0:.2f} seconds.".format(self.time_simulate))
