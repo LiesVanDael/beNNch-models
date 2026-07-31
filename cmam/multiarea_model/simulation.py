@@ -344,6 +344,7 @@ class Simulation:
         print("Created cluster stimulations in {0:.2f} seconds.".format(
             self.time_create_cluster_stimulation))
 
+        self.network_memory = self.memory()
         print(f'Calls to connect: {connect.call_counter}')
         print(f'Number of synapses: {connect.synapse_counter}')
         
