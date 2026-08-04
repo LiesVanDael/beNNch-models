@@ -76,6 +76,7 @@ import copy
 import json
 import csv
 import os
+import tempfile
 import pandas as pd
 import subprocess
 
@@ -84,6 +85,22 @@ from config import base_path
 from nested_dict import nested_dict
 from scipy import stats
 from scipy import integrate
+
+
+def _atomic_json_dump(data, path):
+    """
+    Write JSON to `path` atomically, so concurrent readers (e.g. other
+    MPI ranks on a shared filesystem) never observe a truncated file.
+    """
+    directory = os.path.dirname(path)
+    fd, tmp_path = tempfile.mkstemp(dir=directory, prefix='.tmp-', suffix='.json')
+    try:
+        with os.fdopen(fd, 'w') as f:
+            json.dump(data, f)
+        os.replace(tmp_path, path)
+    except BaseException:
+        os.remove(tmp_path)
+        raise
 
 
 def process_raw_data():
@@ -619,10 +636,9 @@ def process_raw_data():
                 'overlap': overlap,
                 'total_thickness_data': total_thickness_data}
 
-    with open(os.path.join(out_path,
-                           ''.join(('viscortex_raw_data' + out_label + '.json'))),
-              'w') as f:
-        json.dump(raw_data, f)
+    _atomic_json_dump(raw_data,
+                      os.path.join(out_path,
+                                  ''.join(('viscortex_raw_data' + out_label + '.json'))))
 
     """
     Process experimental data
@@ -1372,10 +1388,9 @@ def process_raw_data():
                       'category_density': category_density
                       }
 
-    with open(os.path.join(out_path,
-                           ''.join(('viscortex_processed_data', out_label, '.json'))),
-              'w') as f:
-        json.dump(processed_data, f)
+    _atomic_json_dump(processed_data,
+                      os.path.join(out_path,
+                                  ''.join(('viscortex_processed_data', out_label, '.json'))))
 
 
 if __name__ == '__main__':
