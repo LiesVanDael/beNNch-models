@@ -337,50 +337,36 @@ class Simulation:
         print("Created cortico-cortical connections in {0:.2f} seconds.".format(
             self.time_network_global))
 
-        # Stimulates all clusters of an area
-        #self.create_stimulation()
-        t4 = time.time()
-        self.time_create_stimulation = t4 - t3
-        print("Created stimulations in {0:.2f} seconds.".format(
-            self.time_create_stimulation))
-
         # Stimulates only one cluster of an area
-        #self.create_cluster_stimulation()
-        t5 = time.time()
-        self.time_create_cluster_stimulation = t5 - t4
+        self.create_cluster_stimulation()
+        t4 = time.time()
+        self.time_create_cluster_stimulation = t4 - t3
         print("Created cluster stimulations in {0:.2f} seconds.".format(
             self.time_create_cluster_stimulation))
 
-        # Stimulates only one cluster of an area as pulvinar would
-        #self.create_pulvinar_stimulation()
-        t6 = time.time()
         self.network_memory = self.memory()
-        self.time_create_pulvinar_stimulation = t6 - t5
-        print("Created pulvinar stimulations in {0:.2f} seconds.".format(
-            self.time_create_pulvinar_stimulation))
-
         print(f'Calls to connect: {connect.call_counter}')
         print(f'Number of synapses: {connect.synapse_counter}')
         
         self.save_network_gids()
 
         print("Network size:", nest.GetKernelStatus('network_size'))
-        print("Saved network in {0:2f} seconds.".format(time.time() - t3))
+        print("Saved network in {0:2f} seconds.".format(time.time() - t4))
         
-        t7 = time.time()
+        t5 = time.time()
         nest.Prepare()
-        self.time_network_prepare = time.time() - t7
+        self.time_network_prepare = time.time() - t5
         print("Preparation took {0:.2f} seconds.".format(self.time_network_prepare))
         
-        t8 = time.time()
+        t6 = time.time()
         nest.Run(self.pre_T)
-        self.time_presimulate = time.time() - t8
+        self.time_presimulate = time.time() - t6
         print("Presimulated network in {0:.2f} seconds.".format(self.time_presimulate))
         self.intermediate_kernel_status = nest.kernel_status
 
-        t8 = time.time()
+        t7 = time.time()
         nest.Run(self.T)
-        self.time_simulate = time.time() - t8
+        self.time_simulate = time.time() - t7
         
         self.total_memory = self.memory()
         print("Simulated network in {0:.2f} seconds.".format(self.time_simulate))
@@ -403,9 +389,7 @@ class Simulation:
              'py_time_presimulate': self.time_presimulate,
              'py_time_network_prepare': self.time_network_prepare,
              'py_time_simulate': self.time_simulate,
-             'py_time_create_stimulation': self.time_create_stimulation,
              'py_time_create_cluster_stimulation': self.time_create_cluster_stimulation,
-             'py_time_create_pulvinar_stimulation': self.time_create_pulvinar_stimulation,
              'base_memory': self.base_memory,
              'network_memory': self.network_memory,
              'total_memory': self.total_memory}
@@ -601,7 +585,7 @@ class Area:
         for t_layer, d1 in self.synapses.items():
             for t_pop, d2 in d1.items():
                 for t_cluster in d2:
-                    self.populations.append((t_layer, t_pop, t_cluster)) 
+                    self.populations.append((t_layer, t_pop, t_cluster))
 
         self.K_per_target_area = self.network.K[self.name]   
 
@@ -699,13 +683,22 @@ class Area:
                     nest.Connect(self.simulation.voltmeter,
                                  tuple(range(self.gids[pop][0], self.gids[pop][0] + nrec + 1)))
         if self.network.params['input_params']['poisson_input']:
-            self.poisson_generators = []
+            self.poisson_generators = {} 
             for pop in self.populations:
-                K_ext = self.K_per_target_area[pop[0]][pop[1]][pop[2]]['external']['external']['external']['external']
-                W_ext = self.network.W[self.name][pop[0]][pop[1]][pop[2]]['external']['external']['external']['external']
-                pg = nest.Create('poisson_generator')
-                nest.SetStatus(
-                    pg, {'rate': self.network.rates[self.name][pop[0]][pop[1]] * K_ext})
+                layer, pop_type, cluster = pop
+                key = (layer, pop_type)
+                if key not in self.poisson_generators:
+                    # Rate, K_ext and W_ext are identical across all clusters of
+                    # a given (layer, pop_type), so a single generator per
+                    # (layer, pop_type) suffices instead of one per cluster.
+                    K_ext = self.K_per_target_area[layer][pop_type][cluster]['external']['external']['external']['external']
+                    pg = nest.Create('poisson_generator')
+                    nest.SetStatus(
+                        pg, {'rate': self.network.rates[self.name][layer][pop_type] * K_ext})
+                    self.poisson_generators[key] = pg 
+                pg = self.poisson_generators[key]
+
+                W_ext = self.network.W[self.name][layer][pop_type][cluster]['external']['external']['external']['external']
                 syn_spec = {'weight': W_ext}
                 if self.network.params['USING_NEST_3']:
                     nest.Connect(pg,
@@ -714,9 +707,8 @@ class Area:
                 else:
                     nest.Connect(pg,
                                  tuple(
-                                     range(self.gids[pop][0], self.gids[pop][1] + 1)),
+                                     range(self.gids[pop][0], self.gids[pop][1] + 1)), 
                                  syn_spec=syn_spec)
-                self.poisson_generators.append(pg[0])
 
     def connect_microstimulation(self):
         """ Connects the microstimulation population to the corresponding areas."""
@@ -775,7 +767,7 @@ class Area:
             print('Microstimulation connection established')
 
     def connect_cluster_stimulation(self):
-        """ Connects the microstimulation population to the corresponding areas."""
+        """ #TODO """
         self.cluster_stimulation_gid = {}
         for pop in self.populations:
             # pop contains layer, population, cluster
@@ -796,6 +788,8 @@ class Area:
                 # means that until t=10 rate is zero, between t=10 and t=20 the
                 # rate is 12, between t=20 and t=30 the rate is 0, and from
                 # t=30 on the rate is 16
+                if not any(r != 0 for r in stim_rate):
+                    continue
                 rate = [r * K for r in stim_rate]
 
                 poisson_stim = nest.Create('inhomogeneous_poisson_generator')
@@ -806,14 +800,17 @@ class Area:
                         'rate_values': rate,
                         }
                     )
-                if len(stim_rate) > 0:
-                    print('area', self.name)
-                    print('layer', layer)
-                    print('population', population)
-                    print('cluster', cluster)
-                    print('rate', rate)
-                    print('stim_start', stim_start)
+
+                print('area', self.name)
+                print('layer', layer)
+                print('population', population)
+                print('cluster', cluster)
+                print('rate', rate)
+                print('stim_start', stim_start)
+
             else:
+                if stim_rate == 0:
+                    continue
                 stim_stop = (stim_start + stim_duration)
 
                 rate = stim_rate * K
@@ -828,12 +825,11 @@ class Area:
                         }
                     )
 
-                if stim_rate > 0.:
-                    print('area', self.name)
-                    print('layer', layer)
-                    print('population', population)
-                    print('cluster', cluster)
-                    print('rate', stim_rate)
+                print('area', self.name)
+                print('layer', layer)
+                print('population', population)
+                print('cluster', cluster)
+                print('rate', stim_rate)
             
             syn_spec = {
                     'synapse_model': 'static_synapse',
